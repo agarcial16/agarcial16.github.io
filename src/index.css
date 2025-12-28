@@ -218,3 +218,69 @@ body {
     padding: 0 20px;
   }
 }
+
+/* Animación de carga de barra */
+@keyframes fillBar {
+  from { width: 0%; }
+}
+
+/* Aplica esto a las barras interiores */
+.skill-bar-fill {
+  animation: fillBar 1.5s ease-out forwards;
+}
+
+.project-card {
+  transition: all 0.2s ease;
+  cursor: pointer;
+  position: relative;
+  top: 0;
+}
+
+.project-card:hover {
+  transform: translateY(-8px); /* Se levanta */
+  box-shadow: 12px 12px 0 rgba(0,0,0,0.2); /* La sombra crece */
+  border-color: var(--pkmn-blue); /* El borde se ilumina */
+}
+
+.project-card:hover h3 {
+  color: var(--pkmn-blue) !important; /* El título también cambia */
+}
+
+.cursor-blink {
+  display: inline-block;
+  width: 3px;
+  height: 1.2em;
+  background-color: var(--pkmn-blue);
+  margin-left: 5px;
+  vertical-align: bottom;
+  animation: blink-animation 1s steps(2, start) infinite;
+}
+
+@keyframes blink-animation {
+  to {
+    visibility: hidden;
+  }
+}
+
+@keyframes pixel-float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-8px); }
+  100% { transform: translateY(0px); }
+}
+
+.sprite-float {
+  animation: pixel-float 3s ease-in-out infinite;
+}
+
+/* Efecto de monitor viejo parpadeando */
+@keyframes crt-flicker {
+  0% { opacity: 1; text-shadow: 4px 4px 0 #000; }
+  5% { opacity: 0.8; }
+  10% { opacity: 1; text-shadow: 2px 2px 0 var(--pkmn-yellow); } /* Glitch de color momentáneo */
+  15% { opacity: 1; text-shadow: 4px 4px 0 #000; }
+  100% { opacity: 1; }
+}
+
+.crt-text {
+  animation: crt-flicker 4s infinite;
+}
