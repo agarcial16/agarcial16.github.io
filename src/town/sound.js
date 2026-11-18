@@ -110,14 +110,14 @@ const ROOTS = [48, 45, 41, 43, 48, 45, 41, 43];
 const EIGHTH = 60 / 112 / 2;
 const freq = (m) => 440 * 2 ** ((m - 69) / 12);
 
-function note(type, midi, at, dur, vol) {
+function note(type, midi, at, dur, vol, dest = musicGain) {
   const o = ctx.createOscillator(), g = ctx.createGain();
   o.type = type; o.frequency.value = freq(midi);
   g.gain.setValueAtTime(0, at);
   g.gain.linearRampToValueAtTime(vol, at + 0.01);
   g.gain.setValueAtTime(vol, at + dur * 0.7);
   g.gain.linearRampToValueAtTime(0, at + dur);
-  o.connect(g).connect(musicGain);
+  o.connect(g).connect(dest);
   o.start(at); o.stop(at + dur + 0.02);
 }
 
@@ -149,4 +149,20 @@ if (typeof document !== 'undefined') {
     if (document.hidden) stopMusic();
     else if (enabled && musicOn) startMusic();
   });
+}
+
+// Melodías cortas propias: objetivo del diario cumplido y partida completada.
+const JINGLES = {
+  quest: [[88, 0.08], [93, 0.16]],
+  fanfare: [[72, 0.12], [76, 0.12], [79, 0.12], [84, 0.3], [79, 0.12], [84, 0.5]],
+};
+
+export function jingle(name) {
+  if (!enabled || !ctx) return;
+  let at = ctx.currentTime + 0.02;
+  for (const [midi, dur] of JINGLES[name]) {
+    note('square', midi, at, dur * 0.95, 0.12, sfx);
+    if (name === 'fanfare') note('triangle', midi - 24, at, dur * 0.95, 0.35, sfx);
+    at += dur;
+  }
 }

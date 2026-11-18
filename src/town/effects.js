@@ -93,3 +93,50 @@ export function drawGlint(g, time, x, y) {
     rect(g, c, cx - i, cy); rect(g, c, cx + i, cy); rect(g, c, cx, cy - i); rect(g, c, cx, cy + i);
   }
 }
+
+// Luciérnagas: de noche sustituyen a las mariposas.
+const FIREFLIES = Array.from({ length: 9 }, (_, i) => ({
+  cx: (2 + ((i * 7) % 22)) * TILE, cy: (3 + ((i * 5) % 13)) * TILE, r: 10 + (i % 3) * 6, a: 3000 + i * 410, b: 2300 + i * 270, p: i * 0.7,
+}));
+
+export function drawFireflies(g, time, camX, camY) {
+  for (const f of FIREFLIES) {
+    const on = Math.sin(time / 600 + f.p * 3) > -0.2;
+    if (!on) continue;
+    const x = f.cx + Math.sin(time / f.a * Math.PI * 2 + f.p) * f.r - camX;
+    const y = f.cy + Math.cos(time / f.b * Math.PI * 2 + f.p) * f.r * 0.6 - camY;
+    rect(g, 'rgba(200, 255, 140, 0.35)', x - 1, y - 1, 3, 3);
+    rect(g, '#eaffa0', x, y);
+  }
+}
+
+// Momento del día según la hora local del visitante (?hora=22 en la URL para probarlo).
+export function dayPhase(date = new Date()) {
+  const forced = Number(new URLSearchParams(window.location.search).get('hora'));
+  const h = Number.isInteger(forced) && forced >= 0 && forced < 24 && new URLSearchParams(window.location.search).has('hora') ? forced : date.getHours();
+  if (h >= 21 || h < 6) return 'night';
+  if (h >= 19) return 'dusk';
+  if (h < 8) return 'dawn';
+  return 'day';
+}
+
+const TINTS = {
+  night: [['rgba(10, 16, 64, 0.55)']],
+  dusk: [['rgba(255, 120, 60, 0.16)'], ['rgba(50, 30, 110, 0.18)']],
+  dawn: [['rgba(255, 180, 130, 0.14)']],
+  day: [],
+};
+
+export function drawDaylight(g, phase, w, h) {
+  for (const [c] of TINTS[phase]) { g.fillStyle = c; g.fillRect(0, 0, w, h); }
+}
+
+export function drawWindowLights(g, rects, camX, camY, time) {
+  const flicker = 0.85 + Math.sin(time / 900) * 0.05;
+  for (const r of rects) {
+    rect(g, `rgba(255, 216, 102, ${(0.18 * flicker).toFixed(2)})`, r.x - 3 - camX, r.y - 3 - camY, r.w + 6, r.h + 6);
+    rect(g, `rgba(255, 224, 130, ${flicker.toFixed(2)})`, r.x - camX, r.y - camY, r.w, r.h);
+    rect(g, '#5a3a22', r.x + 5 - camX, r.y - camY, 1, r.h);
+    rect(g, '#5a3a22', r.x - camX, r.y + 4 - camY, r.w, 1);
+  }
+}

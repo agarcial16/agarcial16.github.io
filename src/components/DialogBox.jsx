@@ -4,7 +4,7 @@ const reduceMotion = () =>
   typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 
 // Cuadro de diálogo con texto letra a letra. Clic o tecla para avanzar/saltar.
-export default function DialogBox({ speaker, lines }) {
+export default function DialogBox({ speaker, lines, label }) {
   const [index, setIndex] = useState(0);
   const [shown, setShown] = useState(() => (reduceMotion() ? lines[0].length : 0));
   const line = lines[index];
@@ -24,7 +24,7 @@ export default function DialogBox({ speaker, lines }) {
   };
 
   return (
-    <button type="button" className="win dialog" onClick={advance} aria-label="Siguiente diálogo">
+    <button type="button" className="win dialog" onClick={advance} aria-label={label}>
       <span className="dialog-speaker">{speaker}</span>
       {/* El texto completo queda en el DOM para lectores de pantalla y buscadores. */}
       <span className="dialog-text" aria-live="polite">

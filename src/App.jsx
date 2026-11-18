@@ -5,18 +5,18 @@ import SkillsPanel from './panels/SkillsPanel.jsx';
 import QuestsPanel from './panels/QuestsPanel.jsx';
 import HistoryPanel from './panels/HistoryPanel.jsx';
 import InnPanel from './panels/InnPanel.jsx';
-import { profile } from './data/cv.js';
+import { useI18n, LangToggle } from './i18n/index.jsx';
 import { getLevel } from './lib/level.js';
 
 // El pueblo se carga aparte para que la vista rápida no pague su peso.
 const Town = lazy(() => import('./town/Town.jsx'));
 
 const MENU = [
-  { id: 'estado', label: 'Estado', hint: 'Quién soy', Panel: StatusPanel },
-  { id: 'habilidades', label: 'Habilidades', hint: 'Tecnologías', Panel: SkillsPanel },
-  { id: 'misiones', label: 'Misiones', hint: 'Experiencia y proyectos', Panel: QuestsPanel },
-  { id: 'historia', label: 'Historia', hint: 'Formación', Panel: HistoryPanel },
-  { id: 'posada', label: 'Posada', hint: 'Contacto y CV', Panel: InnPanel },
+  { id: 'estado', Panel: StatusPanel },
+  { id: 'habilidades', Panel: SkillsPanel },
+  { id: 'misiones', Panel: QuestsPanel },
+  { id: 'historia', Panel: HistoryPanel },
+  { id: 'posada', Panel: InnPanel },
 ];
 
 const TOWN = 'pueblo';
@@ -28,6 +28,8 @@ const idFromHash = () => {
 };
 
 export default function App() {
+  const { t, cv } = useI18n();
+  const profile = cv.profile;
   const [active, setActive] = useState(idFromHash);
   const itemRefs = useRef([]);
 
@@ -45,7 +47,7 @@ export default function App() {
   if (!active) return <TitleScreen onNew={() => open(TOWN)} onContinue={() => open('estado')} />;
   if (active === TOWN) {
     return (
-      <Suspense fallback={<p className="town-loading">Cargando el pueblo…</p>}>
+      <Suspense fallback={<p className="town-loading">{t.loadingTown}</p>}>
         <Town places={PLACES} onMenu={() => open('estado')} />
       </Suspense>
     );
@@ -69,7 +71,7 @@ export default function App() {
     <div className="game">
       <div className="stars" aria-hidden="true" />
       <aside className="sidebar">
-        <nav className="win menu" aria-label="Secciones" onKeyDown={onMenuKey}>
+        <nav className="win menu" aria-label={t.sections} onKeyDown={onMenuKey}>
           {MENU.map((m, i) => (
             <button
               key={m.id}
@@ -80,21 +82,23 @@ export default function App() {
               tabIndex={m.id === active ? 0 : -1}
               onClick={() => open(m.id)}
             >
-              {m.label}
-              <span className="menu-hint">{m.hint}</span>
+              {t.menu[m.id][0]}
+              <span className="menu-hint">{t.menu[m.id][1]}</span>
             </button>
           ))}
+          <LangToggle className="btn btn-small menu-lang" />
         </nav>
         <div className="win party">
           <p className="party-name">{profile.name.split(' ').slice(0, 2).join(' ')}</p>
-          <p className="muted small">Nv. {level} · {profile.title}</p>
-          <a className="btn btn-primary btn-block" href={profile.cvPdf} download>Descargar CV</a>
-          <a className="btn btn-block" href={`#${TOWN}`}>Explorar el pueblo</a>
+          <p className="muted small">{t.lvl} {level} · {profile.title}</p>
+          <a className="btn btn-primary btn-block" href={profile.cvPdf} download>{t.downloadCv}</a>
+          <a className="btn btn-block" href={`#${TOWN}`}>{t.exploreTown}</a>
+          <LangToggle className="btn btn-block" />
         </div>
       </aside>
 
       <main className="content" aria-labelledby="panel-title">
-        <h2 id="panel-title" className="sr-only">{current.label}</h2>
+        <h2 id="panel-title" className="sr-only">{t.menu[current.id][0]}</h2>
         <div key={current.id} className="panel-enter">
           <current.Panel />
         </div>

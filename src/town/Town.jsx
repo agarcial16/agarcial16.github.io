@@ -1,47 +1,32 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { TILE, W, H, BUILDINGS, START, NPC, CHEST, LEVER, BRIDGE, BUSHES, world, cellAt, ground } from './map.js';
-import { drawMap, drawChest, drawBridge, drawLever, drawBush, buildSprites, ANGEL, ANGEL_SHAPE, VISITOR } from './art.js';
-import { drawAmbient, drawButterflies, drawPuffs, drawSparkles, drawBubble, drawOpenDoor, drawGlint } from './effects.js';
-import { profile } from '../data/cv.js';
-import { play, setSound, setMusic, loadPreference, loadMusicPreference, resumeOnGesture, stopAll } from './sound.js';
+import { drawMap, drawChest, drawBridge, drawLever, drawBush, buildSprites, windowRects, ANGEL, ANGEL_SHAPE, VISITOR } from './art.js';
+import {
+  drawAmbient, drawButterflies, drawFireflies, drawPuffs, drawSparkles, drawBubble, drawOpenDoor, drawGlint,
+  dayPhase, drawDaylight, drawWindowLights,
+} from './effects.js';
+import { play, jingle, setSound, setMusic, loadPreference, loadMusicPreference, resumeOnGesture, stopAll } from './sound.js';
+import { OBJECTIVES, loadJournal, saveJournal, isComplete } from './journal.js';
+import { useI18n, LangToggle } from '../i18n/index.jsx';
 
 const STEP_MS = 150;
+const BRIDGE_MS = 450;
 const DIRS = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] };
 const KEYS = {
   ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right',
   w: 'up', s: 'down', a: 'left', d: 'right', W: 'up', S: 'down', A: 'left', D: 'right',
 };
 const ACTION_KEYS = new Set(['Enter', ' ', 'z', 'Z', 'e', 'E']);
-
-// Lo que cuento sobre mí ya está en «Mi casa»: aquí solo doy la bienvenida y una pista.
-const HOST_LINES = [
-  '¡Hola, viajero! Soy Ángel. Bienvenido a Villa Portafolio.',
-  'Cada edificio guarda una parte de mi historia; el cartel de cada puerta te dice cuál.',
-  'Por cierto… dicen que en mitad del estanque hay un cofre, y que el camino hasta él está escondido en algún rincón del pueblo.',
-  'Si tienes prisa, pulsa Esc o «Menú» y lo verás todo en la vista rápida.',
-];
-const HOST_LINES_AFTER = [
-  '¡Has encontrado el puente! Ya puedes llegar al cofre del estanque.',
-  'Si tienes prisa, pulsa Esc o «Menú» y lo verás todo en la vista rápida.',
-];
-const LEVER_LINES = ['¡Clac! La palanca cede.', 'Se oye un crujido de madera cerca del estanque…'];
-const LEVER_DONE = ['La palanca ya está bajada. El puente sigue en su sitio.'];
-const BRIDGE_MS = 450;
-const CHEST_LINES = ['¡Has encontrado un pergamino!', 'Es el CV de Ángel en PDF. ¿Te lo llevas?'];
-
-const PROMPTS = { door: 'Entrar', npc: 'Hablar', sign: 'Leer', chest: 'Abrir', lever: 'Tirar', bush: 'Examinar' };
-const BUSH_LINES = [
-  ['Solo hay hojas.'],
-  ['Una mariquita te mira. Nada más.'],
-  ['Ramas, hojas y algún bicho. Aquí no hay nada.'],
-  ['Huele a hierba recién cortada, pero no hay nada.'],
-];
-const LEVER_FOUND = ['Apartas las ramas… ¡hay una palanca escondida!'];
+const LIGHTS = BUILDINGS.flatMap(windowRects);
 
 // El indicador muestra la tecla que se usa: Enter con teclado, A con la cruceta táctil.
 const touchFirst = () => window.matchMedia?.('(pointer: coarse)').matches;
+const reduceMotion = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 
-// Escala entera para que los píxeles se vean nítidos; en pantallas estrechas la cámara sigue al héroe.
+const ENTER_MS = { open: 140, fade: 260, done: 520 };
+const FADE_IN_MS = 380;
+
+// Escala entera para que los píxeles se vean nítidos; en pantallas estrechas la cámara sigue al visitante.
 function useViewport(ref) {
   const [vp, setVp] = useState({ scale: 2, w: W * TILE, h: H * TILE });
   useEffect(() => {
@@ -66,12 +51,25 @@ function useViewport(ref) {
   return vp;
 }
 
-const reduceMotion = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-
-const ENTER_MS = { open: 140, fade: 260, done: 520 };
-const FADE_IN_MS = 380;
+// Cierra con Esc y devuelve el foco al elemento anterior al cerrar.
+function useModalKeys(onClose, focusRef) {
+  useEffect(() => {
+    const prev = document.activeElement;
+    focusRef.current?.focus();
+    const key = (e) => { if (e.key === 'Escape') { e.preventDefault(); e.stopImmediatePropagation(); onClose(); } };
+    window.addEventListener('keydown', key, true);
+    return () => { window.removeEventListener('keydown', key, true); prev?.focus?.(); };
+  }, [onClose, focusRef]);
+}
 
 export default function Town({ places, onMenu }) {
+  const { t, cv } = useI18n();
+  const T = t.town;
+  const profile = cv.profile;
+  const tRef = useRef(T);
+  tRef.current = T;
+  const name = (b) => T.buildings[b.id].name;
+
   const wrapRef = useRef(null);
   const canvasRef = useRef(null);
   const vp = useViewport(wrapRef);
@@ -81,33 +79,93 @@ export default function Town({ places, onMenu }) {
   const [sound, setSoundState] = useState(loadPreference);
   const [musicOn, setMusicState] = useState(loadMusicPreference);
   const [touch, setTouch] = useState(touchFirst);
+  const [journal, setJournal] = useState(loadJournal);
+  const [showJournal, setShowJournal] = useState(false);
+  const [toast, setToast] = useState(null);
+  const [ending, setEnding] = useState(false);
+  const journalRef = useRef(journal);
+  journalRef.current = journal;
+  const phaseRef = useRef(dayPhase());
+
   useEffect(() => {
     const key = () => setTouch(false);
     const pointer = (e) => setTouch(e.pointerType === 'touch');
     window.addEventListener('keydown', key);
     window.addEventListener('pointerdown', pointer);
-    return () => { window.removeEventListener('keydown', key); window.removeEventListener('pointerdown', pointer); };
+    // La luz cambia con la hora del visitante; se revisa cada minuto.
+    const clock = setInterval(() => { phaseRef.current = dayPhase(); }, 60_000);
+    return () => { window.removeEventListener('keydown', key); window.removeEventListener('pointerdown', pointer); clearInterval(clock); };
   }, []);
-  const toggleMusic = () => { const on = !musicOn; setMusicState(on); setMusic(on); };
 
   useEffect(() => {
-    // Cada partida empieza sin puente y con la palanca escondida.
+    // Cada partida empieza sin puente y con la palanca escondida (el diario sí se conserva).
     world.bridge = false; world.leverFound = false; world.searched = new Set();
     const off = resumeOnGesture();
     return () => { off(); stopAll(); };
   }, []);
+
   const toggleSound = () => {
     const on = !sound;
     setSoundState(on);
     setSound(on).then(() => on && play('on'));
   };
+  const toggleMusic = () => { const on = !musicOn; setMusicState(on); setMusic(on); };
+
+  // ---- Diario de misiones ----
+  const complete = useCallback((id) => {
+    setJournal((j) => {
+      if (j.done.includes(id)) return j;
+      const next = { ...j, done: [...j.done, id] };
+      saveJournal(next);
+      return next;
+    });
+  }, []);
+
+  const prevDone = useRef(journal.done);
+  const pendingEnding = useRef(false);
+  useEffect(() => {
+    const added = journal.done.filter((id) => !prevDone.current.includes(id));
+    prevDone.current = journal.done;
+    if (!added.length) return;
+    jingle('quest');
+    setToast(added[added.length - 1]);
+    if (isComplete(journal) && !journal.ended) pendingEnding.current = true;
+  }, [journal]);
+
+  useEffect(() => {
+    if (!toast) return;
+    const timer = setTimeout(() => setToast(null), 2800);
+    return () => clearTimeout(timer);
+  }, [toast]);
+
+  // El final aparece al cerrar el cofre o el edificio que completa el diario.
+  useEffect(() => {
+    if (!pendingEnding.current || dialog || place) return;
+    pendingEnding.current = false;
+    const next = { ...journalRef.current, ended: true };
+    saveJournal(next);
+    setJournal(next);
+    setEnding(true);
+    jingle('fanfare');
+  }, [dialog, place, journal]);
+
+  const resetJournal = () => {
+    const fresh = { done: [], ended: false };
+    prevDone.current = [];
+    saveJournal(fresh);
+    setJournal(fresh);
+  };
+
+  const objectiveLabel = (id) => (id === 'cv' ? T.journal.cv : T.journal.visit(T.buildings[id].name));
 
   const game = useRef({
     x: START.x, y: START.y, dir: START.dir, from: null, t: 0, step: 0,
     held: [], tap: null, paused: false, chestOpen: false, chestT0: 0, talked: false, puffs: [], leverT0: 0,
     anim: reduceMotion() ? null : { kind: 'fadein', t0: performance.now() },
   });
-  game.current.paused = Boolean(dialog || place);
+  game.current.paused = Boolean(dialog || place || showJournal || ending);
+
+  const openPlace = useCallback((b) => { setPlace(b); complete(b.id); }, [complete]);
 
   // Entrar en un edificio: la puerta se abre, el visitante entra y la pantalla funde a negro.
   // Desde los atajos (o con movimiento reducido) se entra directamente.
@@ -118,12 +176,12 @@ export default function Town({ places, onMenu }) {
       s.from = null;
       s.anim = { kind: 'enter', b, t0: 0, done: true };
       play('page');
-      setPlace(b);
+      openPlace(b);
     } else {
       s.anim = { kind: 'enter', b, t0: performance.now() };
       play('door-open');
     }
-  }, []);
+  }, [openPlace]);
 
   const leave = useCallback(() => {
     const s = game.current;
@@ -136,33 +194,42 @@ export default function Town({ places, onMenu }) {
 
   const interact = useCallback(() => {
     const s = game.current;
+    const tx = tRef.current;
     if (s.paused || s.from || s.anim?.kind === 'enter') return;
     const [dx, dy] = DIRS[s.dir];
     const cell = cellAt(s.x + dx, s.y + dy);
     s.held = [];
     if (cell?.kind === 'door') enter(cell.building);
-    else if (cell?.kind === 'npc') { s.talked = true; play('talk'); setDialog({ speaker: profile.name.split(' ')[0], lines: s.leverT0 ? HOST_LINES_AFTER : HOST_LINES }); }
-    else if (cell?.kind === 'sign') { play('page'); setDialog({ speaker: cell.sign.title, lines: cell.sign.lines }); }
-    else if (cell?.kind === 'bush') {
+    else if (cell?.kind === 'npc') {
+      s.talked = true;
+      play('talk');
+      const lines = isComplete(journalRef.current) ? tx.hostDone : s.leverT0 ? tx.hostAfter : tx.host;
+      setDialog({ speaker: profile.name.split(' ')[0], lines });
+    } else if (cell?.kind === 'sign') {
+      play('page');
+      const { sign } = cell;
+      setDialog(sign.welcome
+        ? { speaker: tx.name, lines: tx.welcomeSign }
+        : { speaker: tx.buildings[sign.building].name, lines: [tx.buildings[sign.building].sign] });
+    } else if (cell?.kind === 'bush') {
       play('rustle');
       s.rustle = { index: cell.index, t0: performance.now() };
-      if (cell.lever) { world.leverFound = true; setDialog({ speaker: 'Arbusto', lines: LEVER_FOUND }); }
+      if (cell.lever) { world.leverFound = true; setDialog({ speaker: tx.bush, lines: tx.leverFound }); }
       else {
         world.searched.add(cell.index);
-        setDialog({ speaker: 'Arbusto', lines: BUSH_LINES[cell.index % BUSH_LINES.length] });
+        setDialog({ speaker: tx.bush, lines: tx.bushLines[cell.index % tx.bushLines.length] });
       }
-    }
-    else if (cell?.kind === 'lever') {
-      if (s.leverT0) return setDialog({ speaker: 'Palanca', lines: LEVER_DONE });
+    } else if (cell?.kind === 'lever') {
+      if (s.leverT0) return setDialog({ speaker: tx.lever, lines: tx.leverDone });
       s.leverT0 = performance.now();
       play('lever'); setTimeout(() => play('bridge'), 350);
-      setDialog({ speaker: 'Palanca', lines: LEVER_LINES });
-    }
-    else if (cell?.kind === 'chest') {
+      setDialog({ speaker: tx.lever, lines: tx.leverLines });
+    } else if (cell?.kind === 'chest') {
       if (!s.chestOpen) { s.chestOpen = true; s.chestT0 = performance.now(); play('chest'); setTimeout(() => play('item'), 180); }
-      setDialog({ speaker: 'Cofre', lines: CHEST_LINES, action: { label: 'Descargar CV (PDF)', href: profile.cvPdf } });
+      complete('cv');
+      setDialog({ speaker: tx.chest, lines: tx.chestLines, action: { label: t.downloadCvPdf, href: profile.cvPdf } });
     }
-  }, [enter]);
+  }, [enter, complete, profile, t]);
 
   // Bucle de juego: movimiento casilla a casilla con interpolación y animaciones de ambiente.
   useEffect(() => {
@@ -187,7 +254,7 @@ export default function Town({ places, onMenu }) {
           s.dir = 'up'; s.from = { x: s.x, y: s.y }; s.y -= 1; s.t = 0;
         }
         fade = Math.min(1, Math.max(0, (k - ENTER_MS.fade) / (ENTER_MS.done - ENTER_MS.fade)));
-        if (k >= ENTER_MS.done) { anim.done = true; setPlace(anim.b); }
+        if (k >= ENTER_MS.done) { anim.done = true; openPlace(anim.b); }
       } else if (anim?.kind === 'enter') {
         fade = 1;
       } else if (anim?.kind === 'fadein') {
@@ -220,6 +287,7 @@ export default function Town({ places, onMenu }) {
       const camX = Math.round(Math.max(0, Math.min(W * TILE - canvas.width, fx * TILE + 8 - canvas.width / 2)));
       const camY = Math.round(Math.max(0, Math.min(H * TILE - canvas.height, fy * TILE + 8 - canvas.height / 2)));
       const time = still ? 0 : now;
+      const phase = phaseRef.current;
 
       g.clearRect(0, 0, canvas.width, canvas.height);
       g.drawImage(map, -camX, -camY);
@@ -270,7 +338,12 @@ export default function Town({ places, onMenu }) {
         },
       ];
       actors.sort((a, b) => a.y - b.y).forEach((a) => a.draw());
-      if (!still) drawButterflies(g, time, camX, camY);
+      if (!still && phase !== 'night') drawButterflies(g, time, camX, camY);
+
+      // Luz del día: tinte según la hora, ventanas encendidas al anochecer y luciérnagas de noche.
+      drawDaylight(g, phase, canvas.width, canvas.height);
+      if (phase === 'night' || phase === 'dusk') drawWindowLights(g, LIGHTS, camX, camY, time);
+      if (phase === 'night' && !still) drawFireflies(g, time, camX, camY);
       drawSparkles(g, s.chestT0, now, camX, camY);
 
       if (fade > 0) { g.fillStyle = `rgba(5, 8, 38, ${fade.toFixed(3)})`; g.fillRect(0, 0, canvas.width, canvas.height); }
@@ -280,14 +353,15 @@ export default function Town({ places, onMenu }) {
       if (!s.from && !s.paused && s.anim?.kind !== 'enter') {
         const [dx, dy] = DIRS[s.dir];
         const cell = cellAt(s.x + dx, s.y + dy);
-        if (cell && PROMPTS[cell.kind]) p = cell.kind === 'door' ? `${PROMPTS.door}: ${cell.building.name}` : PROMPTS[cell.kind];
+        const P = tRef.current.prompts;
+        if (cell && P[cell.kind]) p = cell.kind === 'door' ? `${P.door}: ${tRef.current.buildings[cell.building.id].name}` : P[cell.kind];
       }
       if (p !== lastPrompt) { lastPrompt = p; setPrompt(p); }
       raf = requestAnimationFrame(frame);
     };
     raf = requestAnimationFrame(frame);
     return () => cancelAnimationFrame(raf);
-  }, [vp, enter]);
+  }, [vp, enter, openPlace]);
 
   // Teclado
   useEffect(() => {
@@ -303,6 +377,9 @@ export default function Town({ places, onMenu }) {
       } else if (ACTION_KEYS.has(e.key) && !e.repeat && !e.target.closest?.('a, button')) {
         e.preventDefault();
         interact();
+      } else if ((e.key === 'j' || e.key === 'J') && !e.repeat) {
+        s.held = [];
+        setShowJournal(true);
       } else if (e.key === 'Escape') {
         onMenu();
       }
@@ -332,16 +409,24 @@ export default function Town({ places, onMenu }) {
   const release = () => { game.current.held = []; };
 
   const Panel = place && places[place.panel]?.Panel;
+  const doneCount = journal.done.length;
+  const closeDialog = useCallback(() => setDialog(null), []);
+  const closeJournal = useCallback(() => setShowJournal(false), []);
+  const closeEnding = useCallback(() => setEnding(false), []);
 
   return (
     <div className="town" ref={wrapRef}>
       <div className="stars" aria-hidden="true" />
       <header className="town-bar" style={{ width: vp.w * vp.scale }}>
-        <h1 className="town-title">Villa Portafolio</h1>
+        <h1 className="town-title">{T.name}</h1>
         <div className="town-actions">
-          <button type="button" className="btn" aria-pressed={sound} onClick={toggleSound}>Sonido: {sound ? 'sí' : 'no'}</button>
-          {sound && <button type="button" className="btn" aria-pressed={musicOn} onClick={toggleMusic}>Música: {musicOn ? 'sí' : 'no'}</button>}
-          <button type="button" className="btn" onClick={onMenu}>Menú <span className="muted small">(Esc)</span></button>
+          <button type="button" className={`btn ${isComplete(journal) ? 'btn-done' : ''}`} onClick={() => setShowJournal(true)}>
+            {T.journal.button} {doneCount}/{OBJECTIVES.length}
+          </button>
+          <button type="button" className="btn" aria-pressed={sound} onClick={toggleSound}>{T.sound}: {sound ? T.on : T.off}</button>
+          {sound && <button type="button" className="btn" aria-pressed={musicOn} onClick={toggleMusic}>{T.music}: {musicOn ? T.on : T.off}</button>}
+          <LangToggle />
+          <button type="button" className="btn" onClick={onMenu}>{T.menu} <span className="muted small">(Esc)</span></button>
         </div>
       </header>
 
@@ -353,14 +438,19 @@ export default function Town({ places, onMenu }) {
           height={vp.h}
           style={{ width: vp.w * vp.scale, height: vp.h * vp.scale }}
           role="img"
-          aria-label="Pueblo explorable. Usa los atajos de debajo para ir directamente a cada edificio."
+          aria-label={T.canvas}
         />
-        {prompt && !dialog && !place && (
+        {toast && (
+          <p className="town-toast" role="status">
+            <span className="hl">{T.journal.done}</span> {objectiveLabel(toast)}
+          </p>
+        )}
+        {prompt && !dialog && !place && !showJournal && !ending && (
           <button type="button" className="town-prompt" onClick={interact}>
             <span className="town-key">{touch ? 'A' : 'Enter'}</span> {prompt}
           </button>
         )}
-        {dialog && <TownDialog {...dialog} onClose={() => setDialog(null)} />}
+        {dialog && <TownDialog {...dialog} T={T} onClose={closeDialog} />}
       </div>
 
       <div className="town-pad" aria-hidden="true">
@@ -372,20 +462,24 @@ export default function Town({ places, onMenu }) {
         <button type="button" tabIndex={-1} className="pad pad-a" onClick={interact}>A</button>
       </div>
 
-      <p className="town-help muted small">Flechas o WASD para moverte · Enter o Espacio para interactuar · Sonidos de <a href="https://kenney.nl" target="_blank" rel="noreferrer">Kenney</a> (CC0)</p>
-      <nav className="town-shortcuts" aria-label="Atajos a los edificios">
-        <span className="muted small">Atajos:</span>
+      <p className="town-help muted small">{T.help} <a href="https://kenney.nl" target="_blank" rel="noreferrer">Kenney</a> (CC0)</p>
+      <nav className="town-shortcuts" aria-label={T.shortcuts}>
+        <span className="muted small">{T.shortcutsLabel}</span>
         {BUILDINGS.map((b) => (
-          <button key={b.id} type="button" className="btn btn-small" onClick={() => enter(b, { instant: true })}>{b.name}</button>
+          <button key={b.id} type="button" className="btn btn-small" onClick={() => enter(b, { instant: true })}>{name(b)}</button>
         ))}
       </nav>
 
-      {Panel && <PlaceSheet building={place} Panel={Panel} onClose={leave} />}
+      {Panel && <PlaceSheet title={name(place)} hint={T.buildings[place.id].hint} exit={T.exit} Panel={Panel} onClose={leave} />}
+      {showJournal && (
+        <Journal T={T} journal={journal} label={objectiveLabel} onReset={resetJournal} onClose={closeJournal} />
+      )}
+      {ending && <Ending T={T} t={t} profile={profile} onClose={closeEnding} />}
     </div>
   );
 }
 
-function TownDialog({ speaker, lines, action, onClose }) {
+function TownDialog({ speaker, lines, action, T, onClose }) {
   const [i, setI] = useState(0);
   const [shown, setShown] = useState(() => (reduceMotion() ? Infinity : 0));
   const line = lines[i];
@@ -401,8 +495,8 @@ function TownDialog({ speaker, lines, action, onClose }) {
 
   useEffect(() => {
     if (!typing) return;
-    const t = setTimeout(() => { if (shown % 3 === 0 && line[shown] !== ' ') play('blip'); setShown((n) => n + 1); }, 18);
-    return () => clearTimeout(t);
+    const timer = setTimeout(() => { if (shown % 3 === 0 && line[shown] !== ' ') play('blip'); setShown((n) => n + 1); }, 18);
+    return () => clearTimeout(timer);
   }, [typing, shown, line]);
   const ref = useRef(null);
   useEffect(() => ref.current?.focus(), []);
@@ -426,33 +520,80 @@ function TownDialog({ speaker, lines, action, onClose }) {
       </p>
       <div className="town-dialog-actions">
         {last && !typing && action && <a className="btn btn-primary" href={action.href} download onClick={onClose}>{action.label}</a>}
-        <button ref={ref} type="button" className="btn" onClick={next}>{typing ? 'Saltar' : last ? 'Cerrar' : 'Siguiente ▼'}</button>
+        <button ref={ref} type="button" className="btn" onClick={next}>{typing ? T.skip : last ? T.close : T.next}</button>
       </div>
     </div>
   );
 }
 
-function PlaceSheet({ building, Panel, onClose }) {
+function PlaceSheet({ title, hint, exit, Panel, onClose }) {
   const closeRef = useRef(null);
-  useEffect(() => {
-    const prev = document.activeElement;
-    closeRef.current?.focus();
-    const key = (e) => { if (e.key === 'Escape') { e.preventDefault(); e.stopImmediatePropagation(); onClose(); } };
-    window.addEventListener('keydown', key, true);
-    return () => { window.removeEventListener('keydown', key, true); prev?.focus?.(); };
-  }, [onClose]);
-
+  useModalKeys(onClose, closeRef);
   return (
     <div className="town-sheet" role="dialog" aria-modal="true" aria-labelledby="place-title">
       <div className="town-sheet-inner">
         <header className="win town-sheet-head">
           <div>
-            <h2 id="place-title" className="win-title">{building.name}</h2>
-            <p className="muted small">{building.hint}</p>
+            <h2 id="place-title" className="win-title">{title}</h2>
+            <p className="muted small">{hint}</p>
           </div>
-          <button ref={closeRef} type="button" className="btn" onClick={onClose}>Salir ✕</button>
+          <button ref={closeRef} type="button" className="btn" onClick={onClose}>{exit}</button>
         </header>
         <div className="panel-enter"><Panel /></div>
+      </div>
+    </div>
+  );
+}
+
+function Journal({ T, journal, label, onReset, onClose }) {
+  const closeRef = useRef(null);
+  useModalKeys(onClose, closeRef);
+  const J = T.journal;
+  return (
+    <div className="town-modal" role="dialog" aria-modal="true" aria-labelledby="journal-title">
+      <div className="win town-modal-box">
+        <h2 id="journal-title" className="win-title">
+          {J.title} · {journal.done.length}/{OBJECTIVES.length}
+          {isComplete(journal) && <span className="badge is-done journal-badge">✔ {J.complete}</span>}
+        </h2>
+        <ul className="journal">
+          {OBJECTIVES.map((id) => {
+            const done = journal.done.includes(id);
+            return (
+              <li key={id} className={done ? 'is-done' : ''}>
+                <span className="journal-mark" aria-hidden="true">{done ? '✔' : '◇'}</span>
+                <span>{label(id)}</span>
+                <span className="sr-only">{done ? '✔' : ''}</span>
+              </li>
+            );
+          })}
+        </ul>
+        <div className="town-dialog-actions">
+          {journal.done.length > 0 && <button type="button" className="btn" onClick={onReset}>{J.reset}</button>}
+          <button ref={closeRef} type="button" className="btn btn-primary" onClick={onClose}>{T.close}</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Ending({ T, t, profile, onClose }) {
+  const firstRef = useRef(null);
+  useModalKeys(onClose, firstRef);
+  const E = T.ending;
+  return (
+    <div className="town-modal" role="dialog" aria-modal="true" aria-labelledby="ending-title">
+      <div className="win town-modal-box ending">
+        <p className="ending-stars" aria-hidden="true">★ ★ ★</p>
+        <h2 id="ending-title" className="ending-title">{E.title}</h2>
+        <p>{E.text}</p>
+        <p className="hl">{E.cta}</p>
+        <p className="links ending-links">
+          <a ref={firstRef} className="btn btn-primary" href={`mailto:${profile.email}`}>✉ {E.email}</a>
+          <a className="btn" href={profile.linkedin} target="_blank" rel="noreferrer">LinkedIn ↗</a>
+          <a className="btn" href={profile.cvPdf} download>{t.downloadCvPdf}</a>
+          <button type="button" className="btn" onClick={onClose}>{E.keep}</button>
+        </p>
       </div>
     </div>
   );

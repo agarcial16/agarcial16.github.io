@@ -349,6 +349,7 @@ ul, ol { margin: 0; padding: 0; list-style: none; }
   .menu .menu-item::before { left: 6px; top: 9px; font-size: 0.55rem; }
   .menu-hint { display: none; }
   .party { display: none; }
+  .menu .menu-lang { display: inline-flex; align-self: center; margin-left: 4px; }
   .win { padding: 16px; }
   .status { justify-content: center; }
   .contact li, .passives li { grid-template-columns: 1fr; gap: 2px; }
@@ -395,6 +396,7 @@ ul, ol { margin: 0; padding: 0; list-style: none; }
 .town-help { margin: 0; text-align: center; }
 .town-shortcuts { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 8px; max-width: 900px; }
 .btn-small { font-size: 0.5rem; padding: 7px 9px; }
+.menu-lang { display: none; }
 
 .town-pad { display: none; }
 @media (pointer: coarse), (max-width: 760px) {
@@ -427,3 +429,33 @@ ul, ol { margin: 0; padding: 0; list-style: none; }
 .town-sheet-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; position: sticky; top: 0; z-index: 1; }
 .town-sheet-head .win-title { border: 0; margin: 0 0 4px; padding: 0; }
 .town-sheet-head p { margin: 0; }
+
+/* ===== Idioma ===== */
+.title-lang { position: absolute; top: 16px; right: 16px; }
+.title-screen { position: relative; }
+
+/* ===== Diario de misiones y final ===== */
+.btn-done { border-color: var(--green); color: var(--green); }
+.town-toast {
+  position: fixed; left: 50%; top: 14px; z-index: 30; transform: translateX(-50%); margin: 0;
+  max-width: calc(100% - 28px); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  background: rgba(14, 21, 87, 0.94); border: 2px solid var(--gold); border-radius: 6px;
+  padding: 6px 12px; font-size: 0.95rem; text-shadow: var(--shadow);
+  animation: toast-in 240ms ease-out;
+}
+@keyframes toast-in { from { transform: translate(-50%, -12px); opacity: 0; } }
+.town-modal {
+  position: fixed; inset: 0; z-index: 25; display: grid; place-items: center;
+  background: rgba(5, 8, 38, 0.75); padding: 16px;
+}
+.town-modal-box { width: min(520px, 100%); }
+.journal { display: grid; gap: 8px; margin: 0 0 16px; }
+.journal li { display: grid; grid-template-columns: 22px 1fr; gap: 8px; align-items: baseline; }
+.journal .journal-mark { color: var(--muted); }
+.journal .is-done { color: var(--muted); }
+.journal .is-done .journal-mark { color: var(--green); }
+.journal-badge { margin-left: 10px; vertical-align: middle; }
+.ending { text-align: center; }
+.ending-stars { font-family: var(--font-pixel); color: var(--gold); font-size: 0.8rem; letter-spacing: 0.3em; margin-bottom: 10px; }
+.ending-title { font-family: var(--font-pixel); font-size: 1rem; line-height: 1.6; color: var(--gold); margin-bottom: 14px; }
+.ending-links { justify-content: center; }

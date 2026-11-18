@@ -1,30 +1,33 @@
 import { useEffect, useRef } from 'react';
-import { profile } from '../data/cv.js';
+import { useI18n, LangToggle } from '../i18n/index.jsx';
 
 export default function TitleScreen({ onNew, onContinue }) {
+  const { t, cv } = useI18n();
+  const profile = cv.profile;
   const startRef = useRef(null);
   useEffect(() => startRef.current?.focus(), []);
 
   return (
     <main className="title-screen">
       <div className="stars" aria-hidden="true" />
+      <div className="title-lang"><LangToggle /></div>
       <div className="title-logo">
-        <p className="title-kicker">Portafolio de</p>
+        <p className="title-kicker">{t.title.kicker}</p>
         <h1 className="title-name">{profile.name}</h1>
         <p className="title-role">{profile.role}</p>
       </div>
 
-      <nav className="win title-menu" aria-label="Menú principal">
+      <nav className="win title-menu" aria-label={t.title.mainMenu}>
         <button ref={startRef} type="button" className="menu-item" onClick={onNew}>
-          Nueva partida
-          <span className="menu-hint">Explora el pueblo</span>
+          {t.title.newGame[0]}
+          <span className="menu-hint">{t.title.newGame[1]}</span>
         </button>
         <button type="button" className="menu-item" onClick={onContinue}>
-          Continuar
-          <span className="menu-hint">Vista rápida del CV</span>
+          {t.title.continue[0]}
+          <span className="menu-hint">{t.title.continue[1]}</span>
         </button>
         <a className="menu-item" href={profile.cvPdf} download>
-          Descargar CV (PDF)
+          {t.downloadCvPdf}
         </a>
       </nav>
 

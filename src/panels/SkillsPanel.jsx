@@ -1,10 +1,12 @@
 import Window from '../components/Window.jsx';
-import { skillSchools, passives } from '../data/cv.js';
+import { useI18n } from '../i18n/index.jsx';
 
 export default function SkillsPanel() {
+  const { t, cv } = useI18n();
+  const { skillSchools, passives } = cv;
   return (
     <div className="panel-stack">
-      <Window title="Técnicas aprendidas">
+      <Window title={t.skills.learned}>
         <div className="schools">
           {skillSchools.map((s) => (
             <section key={s.school} className="school">
@@ -16,7 +18,7 @@ export default function SkillsPanel() {
           ))}
         </div>
       </Window>
-      <Window title="Habilidades pasivas">
+      <Window title={t.skills.passives}>
         <ul className="passives">
           {passives.map((p) => (
             <li key={p.name}><span className="hl">{p.name}</span><span>{p.text}</span></li>

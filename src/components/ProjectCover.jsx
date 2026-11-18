@@ -26,11 +26,11 @@ function QuantumArt() {
 
 const ART = { quantum: QuantumArt };
 
-export default function ProjectCover({ thumb, art, name }) {
+export default function ProjectCover({ thumb, art, alt }) {
   const Art = ART[art];
   return (
     <figure className="cover">
-      {thumb ? <img src={thumb} alt={`Portada de ${name}`} loading="lazy" /> : Art ? <Art /> : null}
+      {thumb ? <img src={thumb} alt={alt} loading="lazy" /> : Art ? <Art /> : null}
     </figure>
   );
 }

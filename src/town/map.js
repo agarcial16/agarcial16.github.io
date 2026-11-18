@@ -5,20 +5,21 @@ export const W = 26;
 export const H = 18;
 
 export const BUILDINGS = [
-  { id: 'casa', chimney: true, panel: 'estado', name: 'Mi casa', hint: 'Quién soy', sign: 'Quién soy, mi nivel y mis hazañas destacadas.', x: 2, y: 2, w: 5, h: 4, roof: '#c0413b', icon: 'heart' },
-  { id: 'gremio', panel: 'misiones', name: 'Gremio de aventureros', hint: 'Experiencia y proyectos', sign: 'Mi experiencia profesional y los proyectos en los que he trabajado.', x: 10, y: 1, w: 6, h: 5, roof: '#3446c2', icon: 'sword' },
-  { id: 'academia', panel: 'historia', name: 'Academia', hint: 'Formación', sign: 'Mi formación académica y los idiomas que hablo.', x: 19, y: 2, w: 5, h: 4, roof: '#2e7d5b', icon: 'book' },
-  { id: 'taller', chimney: true, panel: 'habilidades', name: 'Taller del herrero', hint: 'Habilidades', sign: 'Las tecnologías y herramientas que domino.', x: 3, y: 11, w: 5, h: 4, roof: '#8a5a2b', icon: 'hammer' },
-  { id: 'posada', chimney: true, panel: 'posada', name: 'Posada', hint: 'Contacto y CV', sign: 'Cómo contactar conmigo y descargar mi CV.', x: 17, y: 11, w: 6, h: 4, roof: '#7d3fa8', icon: 'mug' },
+  { id: 'casa', chimney: true, panel: 'estado', x: 2, y: 2, w: 5, h: 4, roof: '#c0413b', icon: 'heart' },
+  { id: 'gremio', panel: 'misiones', x: 10, y: 1, w: 6, h: 5, roof: '#3446c2', icon: 'sword' },
+  { id: 'academia', panel: 'historia', x: 19, y: 2, w: 5, h: 4, roof: '#2e7d5b', icon: 'book' },
+  { id: 'taller', chimney: true, panel: 'habilidades', x: 3, y: 11, w: 5, h: 4, roof: '#8a5a2b', icon: 'hammer' },
+  { id: 'posada', chimney: true, panel: 'posada', x: 17, y: 11, w: 6, h: 4, roof: '#7d3fa8', icon: 'mug' },
 ].map((b) => ({ ...b, door: { x: b.x + Math.floor(b.w / 2), y: b.y + b.h - 1 } }));
 
 export const START = { x: 13, y: 9, dir: 'up' };
 export const NPC = { x: 15, y: 9, dir: 'left' };
 
 // Carteles: el de bienvenida y uno junto a cada edificio (a la derecha de su fila inferior).
+// El texto está en i18n/strings.js.
 export const SIGNS = [
-  { x: 11, y: 7, title: 'Villa Portafolio', lines: ['Bienvenido a Villa Portafolio.', 'Aquí vive Ángel, ingeniero de software. Entra en los edificios para conocer su historia; cada uno tiene un cartel que dice qué guarda.'] },
-  ...BUILDINGS.map((b) => ({ x: b.x + b.w, y: b.y + b.h - 1, title: b.name, lines: [b.sign] })),
+  { x: 11, y: 7, welcome: true },
+  ...BUILDINGS.map((b) => ({ x: b.x + b.w, y: b.y + b.h - 1, building: b.id })),
 ];
 
 // Minijuego: el cofre está en una isla del estanque. Hay arbustos repartidos por el pueblo y

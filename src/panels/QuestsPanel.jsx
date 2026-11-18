@@ -1,43 +1,46 @@
 import Window from '../components/Window.jsx';
 import ProjectCover from '../components/ProjectCover.jsx';
-import { experience, projects } from '../data/cv.js';
+import { useI18n } from '../i18n/index.jsx';
 
-function QuestBadge({ state }) {
-  const map = { 'en curso': ['⚔', 'En curso', 'is-active'], completada: ['✔', 'Completada', 'is-done'] };
+function QuestBadge({ state, t }) {
+  const map = { 'en curso': ['⚔', t.active, 'is-active'], completada: ['✔', t.done, 'is-done'] };
   const [icon, label, cls] = map[state] ?? map.completada;
   return <span className={`badge ${cls}`}><span aria-hidden="true">{icon}</span> {label}</span>;
 }
 
 export default function QuestsPanel() {
+  const { t: all, cv } = useI18n();
+  const t = all.quests;
+  const { experience, projects } = cv;
   return (
     <div className="panel-stack">
-      <Window title="Misiones de gremio · Experiencia">
+      <Window title={t.guild}>
         <ol className="quests">
           {experience.map((q) => (
-            <li key={q.title} className="quest quest-org">
-              <span className="emblem"><img src={q.logo} alt={`Logo de ${q.org}`} loading="lazy" /></span>
+            <li key={q.period} className="quest quest-org">
+              <span className="emblem"><img src={q.logo} alt={t.logoAlt(q.org)} loading="lazy" /></span>
               <div>
                 <header className="quest-head">
                   <h3>{q.title} <span className="muted">· {q.org}</span></h3>
                   <span className="period">{q.period}</span>
                 </header>
                 <ul className="bullets">{q.points.map((p) => <li key={p}>{p}</li>)}</ul>
-                <p className="reward"><span className="hl">Recompensa:</span> {q.reward}</p>
+                <p className="reward"><span className="hl">{t.reward}</span> {q.reward}</p>
               </div>
             </li>
           ))}
         </ol>
       </Window>
 
-      <Window title="Misiones de grupo · Proyectos">
+      <Window title={t.party}>
         <ol className="quests">
           {projects.map((q) => (
-            <li key={q.name} className="quest quest-project">
-              <ProjectCover thumb={q.thumb} art={q.art} name={q.name} />
+            <li key={q.thumb ?? q.art} className="quest quest-project">
+              <ProjectCover thumb={q.thumb} art={q.art} alt={t.coverAlt(q.name)} />
               <div>
               <header className="quest-head">
                 <h3>{q.name}</h3>
-                <QuestBadge state={q.state} />
+                <QuestBadge state={q.state} t={t} />
               </header>
               {q.party && <p className="muted small">{q.party}</p>}
               <p>{q.summary}</p>

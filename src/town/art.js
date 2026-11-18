@@ -256,3 +256,12 @@ export function drawBush(g, ox, oy, shake = 0) {
   }
   px(g, '#e04848', ox + 5 + shake, oy + 9); px(g, '#e04848', ox + 10 + shake, oy + 11);
 }
+
+// Cristal de cada ventana (mismo cálculo que en building) para iluminarlas de noche.
+export function windowRects(b) {
+  const x0 = b.x * TILE, w = b.w * TILE;
+  const wy = b.y * TILE + (b.h - 2) * TILE + 6;
+  return [x0 + 5, x0 + w - 17]
+    .filter((wx) => Math.abs(wx + 6 - (b.door.x * TILE + 8)) >= 14)
+    .map((wx) => ({ x: wx + 1, y: wy + 1, w: 10, h: 8 }));
+}
