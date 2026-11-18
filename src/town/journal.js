@@ -20,3 +20,14 @@ export function saveJournal(journal) {
 }
 
 export const isComplete = (journal) => OBJECTIVES.every((id) => journal.done.includes(id));
+
+// Estado del pueblo que también se recuerda entre visitas: si ya se tiró de la palanca.
+const WORLD_KEY = 'pueblo-mundo';
+
+export function loadWorld() {
+  try { return { bridge: Boolean(JSON.parse(localStorage.getItem(WORLD_KEY) ?? '{}').bridge) }; } catch { return { bridge: false }; }
+}
+
+export function saveWorld(state) {
+  try { localStorage.setItem(WORLD_KEY, JSON.stringify(state)); } catch { /* sin almacenamiento */ }
+}

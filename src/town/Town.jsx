@@ -6,7 +6,7 @@ import {
   dayPhase, drawDaylight, drawWindowLights,
 } from './effects.js';
 import { play, jingle, setSound, setMusic, loadPreference, loadMusicPreference, resumeOnGesture, stopAll } from './sound.js';
-import { OBJECTIVES, loadJournal, saveJournal, isComplete } from './journal.js';
+import { OBJECTIVES, loadJournal, saveJournal, isComplete, loadWorld, saveWorld } from './journal.js';
 import { useI18n, LangToggle } from '../i18n/index.jsx';
 
 const STEP_MS = 150;
@@ -98,8 +98,11 @@ export default function Town({ places, onMenu }) {
   }, []);
 
   useEffect(() => {
-    // Cada partida empieza sin puente y con la palanca escondida (el diario sí se conserva).
-    world.bridge = false; world.leverFound = false; world.searched = new Set();
+    // El puente y el cofre abierto se recuerdan entre visitas, igual que el diario.
+    const saved = loadWorld();
+    world.bridge = saved.bridge; world.leverFound = saved.bridge; world.searched = new Set();
+    game.current.leverT0 = saved.bridge ? 1 : 0;
+    game.current.chestOpen = journalRef.current.done.includes('cv');
     const off = resumeOnGesture();
     return () => { off(); stopAll(); };
   }, []);
@@ -151,6 +154,13 @@ export default function Town({ places, onMenu }) {
 
   const resetJournal = () => {
     const fresh = { done: [], ended: false };
+    // Empezar de nuevo también esconde la palanca, retira el puente y cierra el cofre.
+    saveWorld({ bridge: false });
+    world.bridge = false; world.leverFound = false;
+    Object.assign(game.current, { leverT0: 0, chestOpen: false, chestT0: 0, rustle: null });
+    // Si estaba en el puente o en la isla, vuelve a la plaza para no quedarse en el agua.
+    const s = game.current;
+    if (['water', 'island'].includes(ground[s.y]?.[s.x])) Object.assign(s, { x: START.x, y: START.y, dir: START.dir, from: null });
     prevDone.current = [];
     saveJournal(fresh);
     setJournal(fresh);
@@ -222,6 +232,7 @@ export default function Town({ places, onMenu }) {
     } else if (cell?.kind === 'lever') {
       if (s.leverT0) return setDialog({ speaker: tx.lever, lines: tx.leverDone });
       s.leverT0 = performance.now();
+      saveWorld({ bridge: true });
       play('lever'); setTimeout(() => play('bridge'), 350);
       setDialog({ speaker: tx.lever, lines: tx.leverLines });
     } else if (cell?.kind === 'chest') {
