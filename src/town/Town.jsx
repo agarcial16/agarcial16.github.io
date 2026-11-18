@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { TILE, W, H, BUILDINGS, START, NPC, CHEST, LEVER, BRIDGE, BUSHES, world, cellAt, ground } from './map.js';
 import { drawMap, drawChest, drawBridge, drawLever, drawBush, buildSprites, windowRects, ANGEL, ANGEL_SHAPE, VISITOR } from './art.js';
 import {
@@ -8,6 +8,12 @@ import {
 import { play, jingle, setTheme, setSound, setMusic, loadPreference, loadMusicPreference, resumeOnGesture, stopAll } from './sound.js';
 import { OBJECTIVES, loadJournal, saveJournal, isComplete, loadWorld, saveWorld } from './journal.js';
 import { useI18n, LangToggle } from '../i18n/index.jsx';
+import { ENEMIES } from './battle/data.js';
+
+// El combate se descarga solo al entrar en la cueva.
+const Battle = lazy(() => import('./battle/Battle.jsx'));
+const CAVE_KEY = 'pueblo-cueva';
+const loadCave = () => { try { return JSON.parse(localStorage.getItem(CAVE_KEY) ?? '[]'); } catch { return []; } };
 import { track } from '../lib/analytics.js';
 import { feedKonami, isGameBoy, quantize } from '../lib/gameboy.js';
 
@@ -66,7 +72,7 @@ function useModalKeys(onClose, focusRef) {
 }
 
 export default function Town({ places, onMenu }) {
-  const { t, cv } = useI18n();
+  const { t, cv, lang } = useI18n();
   const T = t.town;
   const profile = cv.profile;
   const tRef = useRef(T);
@@ -86,6 +92,10 @@ export default function Town({ places, onMenu }) {
   const [showJournal, setShowJournal] = useState(false);
   const [toast, setToast] = useState(null);
   const [ending, setEnding] = useState(false);
+  const [battle, setBattle] = useState(null);
+  const [defeated, setDefeated] = useState(loadCave);
+  const defeatedRef = useRef(defeated);
+  defeatedRef.current = defeated;
   const journalRef = useRef(journal);
   journalRef.current = journal;
   const phaseRef = useRef(dayPhase());
@@ -97,7 +107,7 @@ export default function Town({ places, onMenu }) {
     window.addEventListener('pointerdown', pointer);
     // La luz cambia con la hora del visitante; se revisa cada minuto.
     // La música también: de noche suena la nana.
-    const syncTheme = () => setTheme(phaseRef.current === 'night' ? 'night' : 'day');
+    const syncTheme = () => { if (!document.querySelector('.battle')) setTheme(phaseRef.current === 'night' ? 'night' : 'day'); };
     syncTheme();
     const clock = setInterval(() => { phaseRef.current = dayPhase(); syncTheme(); }, 60_000);
     return () => { window.removeEventListener('keydown', key); window.removeEventListener('pointerdown', pointer); clearInterval(clock); };
@@ -173,14 +183,14 @@ export default function Town({ places, onMenu }) {
     setJournal(fresh);
   };
 
-  const objectiveLabel = (id) => (id === 'cv' ? T.journal.cv : T.journal.visit(T.buildings[id].name));
+  const objectiveLabel = (id) => (id === 'cv' ? T.journal.cv : id === 'cave' ? T.battle.extra : T.journal.visit(T.buildings[id].name));
 
   const game = useRef({
     x: START.x, y: START.y, dir: START.dir, from: null, t: 0, step: 0,
     held: [], tap: null, paused: false, chestOpen: false, chestT0: 0, talked: false, puffs: [], leverT0: 0,
     anim: reduceMotion() ? null : { kind: 'fadein', t0: performance.now() },
   });
-  game.current.paused = Boolean(dialog || place || showJournal || ending);
+  game.current.paused = Boolean(dialog || place || showJournal || ending || battle);
 
   const openPlace = useCallback((b) => { setPlace(b); complete(b.id); }, [complete]);
 
@@ -209,6 +219,29 @@ export default function Town({ places, onMenu }) {
     setPlace(null);
   }, []);
 
+  const startBattle = useCallback(() => {
+    const s = game.current;
+    s.held = []; s.tap = null;
+    const next = ENEMIES.find((e) => !defeatedRef.current.includes(e.id));
+    if (!next) { setDialog({ speaker: tRef.current.battle.title, lines: [tRef.current.battle.cleared] }); return; }
+    setTheme('battle');
+    setBattle(next);
+  }, []);
+
+  const endBattle = useCallback((result) => {
+    const foe = battle;
+    setBattle(null);
+    setTheme(phaseRef.current === 'night' ? 'night' : 'day');
+    if (result !== 'win' || !foe) return;
+    track(`combate-${foe.id}`);
+    setDefeated((d) => {
+      const next = d.includes(foe.id) ? d : [...d, foe.id];
+      try { localStorage.setItem(CAVE_KEY, JSON.stringify(next)); } catch { /* sin almacenamiento */ }
+      if (next.length === ENEMIES.length) setToast('cave');
+      return next;
+    });
+  }, [battle]);
+
   const interact = useCallback(() => {
     const s = game.current;
     const tx = tRef.current;
@@ -217,6 +250,7 @@ export default function Town({ places, onMenu }) {
     const cell = cellAt(s.x + dx, s.y + dy);
     s.held = [];
     if (cell?.kind === 'door') enter(cell.building);
+    else if (cell?.kind === 'cave') startBattle();
     else if (cell?.kind === 'npc') {
       s.talked = true;
       play('talk');
@@ -227,6 +261,7 @@ export default function Town({ places, onMenu }) {
       const { sign } = cell;
       setDialog(sign.welcome
         ? { speaker: tx.name, lines: tx.welcomeSign }
+        : sign.cave ? { speaker: tx.battle.sign[0], lines: [tx.battle.sign[1]] }
         : { speaker: tx.buildings[sign.building].name, lines: [tx.buildings[sign.building].sign] });
     } else if (cell?.kind === 'bush') {
       play('rustle');
@@ -247,7 +282,7 @@ export default function Town({ places, onMenu }) {
       complete('cv');
       setDialog({ speaker: tx.chest, lines: tx.chestLines, action: { label: t.downloadCvPdf, href: profile.cvPdf } });
     }
-  }, [enter, complete, profile, t]);
+  }, [enter, complete, startBattle, profile, t]);
 
   // Bucle de juego: movimiento casilla a casilla con interpolación y animaciones de ambiente.
   useEffect(() => {
@@ -296,6 +331,7 @@ export default function Town({ places, onMenu }) {
         const [dx, dy] = DIRS[s.dir];
         const cell = cellAt(s.x + dx, s.y + dy);
         if (cell?.kind === 'door') enter(cell.building);
+        else if (cell?.kind === 'cave') startBattle();
         else if (!cell) { s.from = { x: s.x, y: s.y }; s.x += dx; s.y += dy; s.t = 0; }
         else if (now - (s.bumpAt ?? 0) > 280) { s.bumpAt = now; play('bump'); }
       }
@@ -380,7 +416,7 @@ export default function Town({ places, onMenu }) {
     };
     raf = requestAnimationFrame(frame);
     return () => cancelAnimationFrame(raf);
-  }, [vp, enter, openPlace]);
+  }, [vp, enter, openPlace, startBattle]);
 
   // Teclado
   useEffect(() => {
@@ -423,13 +459,20 @@ export default function Town({ places, onMenu }) {
     e.preventDefault();
     e.currentTarget.setPointerCapture?.(e.pointerId);
     feedKonami(dir);
+    if (battle) { window.dispatchEvent(new CustomEvent('battle-input', { detail: dir })); return; }
     game.current.held = [dir];
     game.current.tap = dir;
   };
-  const pressA = () => { feedKonami('a'); if (dialog) return; interact(); };
+  const pressA = () => {
+    feedKonami('a');
+    if (battle) return window.dispatchEvent(new CustomEvent('battle-input', { detail: 'a' }));
+    if (dialog) return;
+    interact();
+  };
   const pressB = () => {
     feedKonami('b');
-    if (dialog) setDialog(null);
+    if (battle) window.dispatchEvent(new CustomEvent('battle-input', { detail: 'b' }));
+    else if (dialog) setDialog(null);
     else if (showJournal) setShowJournal(false);
     else if (ending) setEnding(false);
   };
@@ -475,12 +518,17 @@ export default function Town({ places, onMenu }) {
                 <span className="hl">{T.journal.done}</span> {objectiveLabel(toast)}
               </p>
             )}
-            {prompt && !dialog && !place && !showJournal && !ending && (
+            {prompt && !dialog && !place && !showJournal && !ending && !battle && (
               <button type="button" className="town-prompt" onClick={interact}>
                 <span className="town-key">{touch ? 'A' : 'Enter'}</span> {prompt}
               </button>
             )}
             {dialog && <TownDialog {...dialog} T={T} onClose={closeDialog} />}
+            {battle && (
+              <Suspense fallback={null}>
+                <Battle key={battle.id} enemy={battle} lang={lang} T={T} width={vp.w} height={vp.h} scale={vp.scale} onEnd={endBattle} />
+              </Suspense>
+            )}
           </div>
         </div>
 
@@ -512,7 +560,7 @@ export default function Town({ places, onMenu }) {
 
       {Panel && <PlaceSheet title={name(place)} hint={T.buildings[place.id].hint} exit={T.exit} Panel={Panel} onClose={leave} />}
       {showJournal && (
-        <Journal T={T} journal={journal} label={objectiveLabel} onReset={resetJournal} onClose={closeJournal} />
+        <Journal T={T} journal={journal} label={objectiveLabel} cave={defeated.length} onReset={resetJournal} onClose={closeJournal} />
       )}
       {ending && <Ending T={T} t={t} profile={profile} onClose={closeEnding} />}
     </div>
@@ -585,7 +633,7 @@ function PlaceSheet({ title, hint, exit, Panel, onClose }) {
   );
 }
 
-function Journal({ T, journal, label, onReset, onClose }) {
+function Journal({ T, journal, label, cave, onReset, onClose }) {
   const closeRef = useRef(null);
   useModalKeys(onClose, closeRef);
   const J = T.journal;
@@ -607,6 +655,10 @@ function Journal({ T, journal, label, onReset, onClose }) {
               </li>
             );
           })}
+          <li className={`journal-extra ${cave === ENEMIES.length ? 'is-done' : ''}`}>
+            <span className="journal-mark" aria-hidden="true">★</span>
+            <span>{T.battle.extra} ({cave}/{ENEMIES.length})</span>
+          </li>
         </ul>
         <div className="town-dialog-actions">
           {journal.done.length > 0 && <button type="button" className="btn" onClick={onReset}>{J.reset}</button>}

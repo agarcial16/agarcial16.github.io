@@ -19,6 +19,7 @@ export const NPC = { x: 15, y: 9, dir: 'left' };
 // El texto está en i18n/strings.js.
 export const SIGNS = [
   { x: 11, y: 7, welcome: true },
+  { x: 10, y: 16, cave: true },
   ...BUILDINGS.map((b) => ({ x: b.x + b.w, y: b.y + b.h - 1, building: b.id })),
 ];
 
@@ -29,6 +30,9 @@ export const ISLAND = [[12, 12]];
 export const CHEST = { x: 13, y: 12 };
 export const BRIDGE = [[12, 10], [12, 11]];
 export const LEVER = { x: 24, y: 16 };
+
+// Cueva de los bugs: entrada en el borde sur del bosque. Dentro esperan los combates.
+export const CAVE = { x: 11, y: 17 };
 export const BUSHES = [[1, 1], [18, 1], [7, 9], [20, 9], [1, 16], [LEVER.x, LEVER.y]];
 
 // Estado del mundo que cambia durante la partida.
@@ -63,6 +67,7 @@ export function cellAt(x, y) {
   const sign = SIGNS.find((s) => s.x === x && s.y === y);
   if (sign) return { kind: 'sign', sign };
   if (x === CHEST.x && y === CHEST.y) return { kind: 'chest' };
+  if (x === CAVE.x && y === CAVE.y) return { kind: 'cave' };
   if (x === LEVER.x && y === LEVER.y && world.leverFound) return { kind: 'lever' };
   const bush = BUSHES.findIndex(([bx, by]) => bx === x && by === y);
   if (bush >= 0) return { kind: 'bush', index: bush, lever: x === LEVER.x && y === LEVER.y };

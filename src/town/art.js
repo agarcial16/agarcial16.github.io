@@ -1,5 +1,5 @@
 // Pixel art del pueblo, dibujado por código (sin imágenes externas).
-import { TILE, W, H, BUILDINGS, ground, SIGNS, BRIDGE } from './map.js';
+import { TILE, W, H, BUILDINGS, ground, SIGNS, BRIDGE, CAVE } from './map.js';
 
 const rnd = (x, y, k) => (((x * 73856093) ^ (y * 19349663) ^ (k * 83492791)) >>> 0) % 1000 / 1000;
 
@@ -158,6 +158,7 @@ export function drawMap() {
   }
   BUILDINGS.forEach((b) => building(g, b));
   SIGNS.forEach((s) => sign(g, s.x * TILE, s.y * TILE));
+  drawCave(g, CAVE.x * TILE, CAVE.y * TILE);
   return c;
 }
 
@@ -264,4 +265,17 @@ export function windowRects(b) {
   return [x0 + 5, x0 + w - 17]
     .filter((wx) => Math.abs(wx + 6 - (b.door.x * TILE + 8)) >= 14)
     .map((wx) => ({ x: wx + 1, y: wy + 1, w: 10, h: 8 }));
+}
+
+// Entrada de la cueva en el borde del bosque: roca gris con un arco oscuro.
+export function drawCave(g, ox, oy) {
+  px(g, '#3f9b4b', ox, oy, TILE, TILE);
+  for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) {
+    const d = Math.hypot((x - 7.5) / 1.05, y - 15);
+    if (d < 15) px(g, d > 13.6 ? '#3a3a48' : (x * 7 + y * 3) % 9 === 0 ? '#8d8d9c' : '#6d6d7c', ox + x, oy + y);
+  }
+  for (let y = 4; y < 16; y++) for (let x = 3; x < 13; x++) {
+    if (Math.hypot(x - 7.5, y - 15) < 9.6) px(g, y < 7 ? '#1a1530' : '#0b0916', ox + x, oy + y);
+  }
+  px(g, '#ffd866', ox + 5, oy + 10); px(g, '#ffd866', ox + 10, oy + 10); // ojos en la oscuridad
 }
