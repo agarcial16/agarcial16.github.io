@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { Suspense, lazy, useEffect, useRef, useState } from 'react';
 import TitleScreen from './components/TitleScreen.jsx';
 import StatusPanel from './panels/StatusPanel.jsx';
 import SkillsPanel from './panels/SkillsPanel.jsx';
@@ -8,6 +8,9 @@ import InnPanel from './panels/InnPanel.jsx';
 import { profile } from './data/cv.js';
 import { getLevel } from './lib/level.js';
 
+// El pueblo se carga aparte para que la vista rápida no pague su peso.
+const Town = lazy(() => import('./town/Town.jsx'));
+
 const MENU = [
   { id: 'estado', label: 'Estado', hint: 'Quién soy', Panel: StatusPanel },
   { id: 'habilidades', label: 'Habilidades', hint: 'Tecnologías', Panel: SkillsPanel },
@@ -16,9 +19,12 @@ const MENU = [
   { id: 'posada', label: 'Posada', hint: 'Contacto y CV', Panel: InnPanel },
 ];
 
+const TOWN = 'pueblo';
+const PLACES = Object.fromEntries(MENU.map((m) => [m.id, m]));
+
 const idFromHash = () => {
   const id = window.location.hash.slice(1);
-  return MENU.some((m) => m.id === id) ? id : null;
+  return id === TOWN || MENU.some((m) => m.id === id) ? id : null;
 };
 
 export default function App() {
@@ -36,7 +42,14 @@ export default function App() {
     setActive(id);
   };
 
-  if (!active) return <TitleScreen onStart={() => open('estado')} />;
+  if (!active) return <TitleScreen onNew={() => open(TOWN)} onContinue={() => open('estado')} />;
+  if (active === TOWN) {
+    return (
+      <Suspense fallback={<p className="town-loading">Cargando el pueblo…</p>}>
+        <Town places={PLACES} onMenu={() => open('estado')} />
+      </Suspense>
+    );
+  }
 
   // Flechas arriba/abajo (o izquierda/derecha en móvil) mueven el cursor del menú.
   const onMenuKey = (e) => {
@@ -76,6 +89,7 @@ export default function App() {
           <p className="party-name">{profile.name.split(' ').slice(0, 2).join(' ')}</p>
           <p className="muted small">Nv. {level} · {profile.title}</p>
           <a className="btn btn-primary btn-block" href={profile.cvPdf} download>Descargar CV</a>
+          <a className="btn btn-block" href={`#${TOWN}`}>Explorar el pueblo</a>
         </div>
       </aside>
 

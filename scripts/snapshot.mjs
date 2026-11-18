@@ -25,6 +25,7 @@ const screens = [
   ['misiones', '#misiones'],
   ['historia', '#historia'],
   ['posada', '#posada'],
+  ['pueblo', '#pueblo'],
 ];
 
 const browser = await chromium.launch({ channel: 'chrome' });

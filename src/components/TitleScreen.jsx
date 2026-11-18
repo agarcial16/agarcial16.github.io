@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { profile } from '../data/cv.js';
 
-export default function TitleScreen({ onStart }) {
+export default function TitleScreen({ onNew, onContinue }) {
   const startRef = useRef(null);
   useEffect(() => startRef.current?.focus(), []);
 
@@ -15,8 +15,13 @@ export default function TitleScreen({ onStart }) {
       </div>
 
       <nav className="win title-menu" aria-label="Menú principal">
-        <button ref={startRef} type="button" className="menu-item" onClick={onStart}>
+        <button ref={startRef} type="button" className="menu-item" onClick={onNew}>
+          Nueva partida
+          <span className="menu-hint">Explora el pueblo</span>
+        </button>
+        <button type="button" className="menu-item" onClick={onContinue}>
           Continuar
+          <span className="menu-hint">Vista rápida del CV</span>
         </button>
         <a className="menu-item" href={profile.cvPdf} download>
           Descargar CV (PDF)
