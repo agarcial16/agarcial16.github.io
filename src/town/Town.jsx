@@ -8,6 +8,7 @@ import {
 import { play, jingle, setSound, setMusic, loadPreference, loadMusicPreference, resumeOnGesture, stopAll } from './sound.js';
 import { OBJECTIVES, loadJournal, saveJournal, isComplete, loadWorld, saveWorld } from './journal.js';
 import { useI18n, LangToggle } from '../i18n/index.jsx';
+import { track } from '../lib/analytics.js';
 
 const STEP_MS = 150;
 const BRIDGE_MS = 450;
@@ -150,6 +151,7 @@ export default function Town({ places, onMenu }) {
     setJournal(next);
     setEnding(true);
     jingle('fanfare');
+    track('partida-completada');
   }, [dialog, place, journal]);
 
   const resetJournal = () => {
