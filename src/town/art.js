@@ -27,12 +27,14 @@ function path(g, ox, oy, tx, ty) {
   }
 }
 
-function water(g, ox, oy, tx, ty) {
+// Agua: con time > 0 las olas se desplazan (se redibuja en cada fotograma).
+export function drawWater(g, ox, oy, tx, ty, time = 0) {
   px(g, '#2f6fd6', ox, oy, TILE, TILE);
   if (ground[ty - 1]?.[tx] !== 'water') px(g, '#1d4a9e', ox, oy, TILE, 3);
   for (let i = 0; i < 3; i++) {
-    const x = Math.floor(rnd(tx, ty, i) * 10), y = 5 + i * 4;
-    px(g, '#6aa4ff', ox + x, oy + y, 5, 1);
+    const x = Math.floor(rnd(tx, ty, i) * 10 + time / (500 + i * 170)) % 14, y = 5 + i * 4;
+    px(g, '#6aa4ff', ox + x, oy + y, Math.min(5, 16 - x), 1);
+    if (x > 11) px(g, '#6aa4ff', ox, oy + y, x - 11, 1);
   }
 }
 
@@ -69,6 +71,12 @@ function building(g, b) {
   }
   px(g, '#ffffff30', x0 - 1, y0, w + 2, 2);
   px(g, '#1a1230', x0 - 1, y0 + roofH - 2, w + 2, 2);
+  if (b.chimney) {
+    const cx = x0 + w - 14;
+    px(g, '#4a2a20', cx - 1, y0 - 5, 8, 3);
+    px(g, '#8a4a36', cx, y0 - 2, 6, 9);
+    px(g, '#6e382a', cx, y0 + 2, 6, 1);
+  }
   // Ventanas
   const wy = wallY + 6;
   for (const wx of [x0 + 5, x0 + w - 17]) {
@@ -108,7 +116,7 @@ export function drawMap() {
   const g = c.getContext('2d');
   for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
     const ox = x * TILE, oy = y * TILE, t = ground[y][x];
-    if (t === 'water') water(g, ox, oy, x, y);
+    if (t === 'water') drawWater(g, ox, oy, x, y);
     else if (t === 'path') path(g, ox, oy, x, y);
     else grass(g, ox, oy, x, y);
     if (t === 'tree') tree(g, ox, oy);

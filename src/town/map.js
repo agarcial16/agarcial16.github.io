@@ -5,11 +5,11 @@ export const W = 26;
 export const H = 18;
 
 export const BUILDINGS = [
-  { id: 'casa', panel: 'estado', name: 'Mi casa', hint: 'Quién soy', x: 2, y: 2, w: 5, h: 4, roof: '#c0413b', icon: 'heart' },
+  { id: 'casa', chimney: true, panel: 'estado', name: 'Mi casa', hint: 'Quién soy', x: 2, y: 2, w: 5, h: 4, roof: '#c0413b', icon: 'heart' },
   { id: 'gremio', panel: 'misiones', name: 'Gremio de aventureros', hint: 'Experiencia y proyectos', x: 10, y: 1, w: 6, h: 5, roof: '#3446c2', icon: 'sword' },
   { id: 'academia', panel: 'historia', name: 'Academia', hint: 'Formación', x: 19, y: 2, w: 5, h: 4, roof: '#2e7d5b', icon: 'book' },
-  { id: 'taller', panel: 'habilidades', name: 'Taller del herrero', hint: 'Habilidades', x: 3, y: 11, w: 5, h: 4, roof: '#8a5a2b', icon: 'hammer' },
-  { id: 'posada', panel: 'posada', name: 'Posada', hint: 'Contacto y CV', x: 17, y: 11, w: 6, h: 4, roof: '#7d3fa8', icon: 'mug' },
+  { id: 'taller', chimney: true, panel: 'habilidades', name: 'Taller del herrero', hint: 'Habilidades', x: 3, y: 11, w: 5, h: 4, roof: '#8a5a2b', icon: 'hammer' },
+  { id: 'posada', chimney: true, panel: 'posada', name: 'Posada', hint: 'Contacto y CV', x: 17, y: 11, w: 6, h: 4, roof: '#7d3fa8', icon: 'mug' },
 ].map((b) => ({ ...b, door: { x: b.x + Math.floor(b.w / 2), y: b.y + b.h - 1 } }));
 
 export const START = { x: 13, y: 9, dir: 'up' };
