@@ -21,16 +21,17 @@ export const SIGNS = [
   ...BUILDINGS.map((b) => ({ x: b.x + b.w, y: b.y + b.h - 1, title: b.name, lines: [b.sign] })),
 ];
 
-// Minijuego: el cofre está en una isla del estanque. La palanca, escondida detrás de mi casa,
-// tiende un puente hasta ella.
+// Minijuego: el cofre está en una isla del estanque. Hay arbustos repartidos por el pueblo y
+// solo uno esconde la palanca que tiende el puente hasta la isla.
 export const POND = { x: 10, y: 10, w: 6, h: 5 };
 export const ISLAND = [[12, 12]];
 export const CHEST = { x: 13, y: 12 };
 export const BRIDGE = [[12, 10], [12, 11]];
-export const LEVER = { x: 1, y: 1 };
+export const LEVER = { x: 24, y: 16 };
+export const BUSHES = [[1, 1], [18, 1], [7, 9], [20, 9], [1, 16], [LEVER.x, LEVER.y]];
 
 // Estado del mundo que cambia durante la partida.
-export const world = { bridge: false };
+export const world = { bridge: false, leverFound: false, searched: new Set() };
 
 // Suelo: grass, path, water o tree. Los edificios y objetos van aparte.
 export const ground = (() => {
@@ -61,7 +62,9 @@ export function cellAt(x, y) {
   const sign = SIGNS.find((s) => s.x === x && s.y === y);
   if (sign) return { kind: 'sign', sign };
   if (x === CHEST.x && y === CHEST.y) return { kind: 'chest' };
-  if (x === LEVER.x && y === LEVER.y) return { kind: 'lever' };
+  if (x === LEVER.x && y === LEVER.y && world.leverFound) return { kind: 'lever' };
+  const bush = BUSHES.findIndex(([bx, by]) => bx === x && by === y);
+  if (bush >= 0) return { kind: 'bush', index: bush, lever: x === LEVER.x && y === LEVER.y };
   const t = ground[y][x];
   if (t === 'water') return world.bridge && isBridge(x, y) ? null : { kind: 'wall' };
   return t === 'tree' ? { kind: 'wall' } : null;

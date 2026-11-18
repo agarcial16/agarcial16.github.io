@@ -243,3 +243,16 @@ export function buildSprites(pal, shape = BASE) {
   }
   return out;
 }
+
+// Arbusto que puede esconder algo. shake desplaza la copa unos píxeles al examinarlo.
+export function drawBush(g, ox, oy, shake = 0) {
+  px(g, '#00000033', ox + 2, oy + 13, 12, 2);
+  for (let y = 0; y < 10; y++) for (let x = 0; x < 16; x++) {
+    const d = Math.hypot((x - 7.5) / 1.25, y - 5);
+    if (d < 5.6) {
+      const c = d > 4.6 ? '#123d1f' : (x * 3 + y * 5) % 7 === 0 ? '#57b45e' : y < 4 ? '#2f8a44' : '#1f6b33';
+      px(g, c, ox + x + shake, oy + 5 + y);
+    }
+  }
+  px(g, '#e04848', ox + 5 + shake, oy + 9); px(g, '#e04848', ox + 10 + shake, oy + 11);
+}

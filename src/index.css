@@ -386,7 +386,7 @@ ul, ol { margin: 0; padding: 0; list-style: none; }
   padding: 6px 12px; cursor: pointer;
 }
 .town-key {
-  display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: 50%;
+  display: inline-grid; place-items: center; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 10px;
   font-family: var(--font-pixel); font-size: 0.5rem; color: #1a1500; text-shadow: none; background: var(--gold);
 }
 .town-dialog { position: absolute; left: 14px; right: 14px; bottom: 14px; padding: 22px 18px 14px; }

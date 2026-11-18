@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { TILE, W, H, BUILDINGS, START, NPC, CHEST, LEVER, BRIDGE, world, cellAt, ground } from './map.js';
-import { drawMap, drawChest, drawBridge, drawLever, buildSprites, ANGEL, ANGEL_SHAPE, VISITOR } from './art.js';
+import { TILE, W, H, BUILDINGS, START, NPC, CHEST, LEVER, BRIDGE, BUSHES, world, cellAt, ground } from './map.js';
+import { drawMap, drawChest, drawBridge, drawLever, drawBush, buildSprites, ANGEL, ANGEL_SHAPE, VISITOR } from './art.js';
 import { drawAmbient, drawButterflies, drawPuffs, drawSparkles, drawBubble, drawOpenDoor, drawGlint } from './effects.js';
 import { profile } from '../data/cv.js';
-import { play, setSound, loadPreference, resumeOnGesture, stopAll } from './sound.js';
+import { play, setSound, setMusic, loadPreference, loadMusicPreference, resumeOnGesture, stopAll } from './sound.js';
 
 const STEP_MS = 150;
 const DIRS = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] };
@@ -17,7 +17,7 @@ const ACTION_KEYS = new Set(['Enter', ' ', 'z', 'Z', 'e', 'E']);
 const HOST_LINES = [
   '¡Hola, viajero! Soy Ángel. Bienvenido a Villa Portafolio.',
   'Cada edificio guarda una parte de mi historia; el cartel de cada puerta te dice cuál.',
-  'Por cierto… dicen que en mitad del estanque hay un cofre, y que alguien escondió una palanca detrás de mi casa.',
+  'Por cierto… dicen que en mitad del estanque hay un cofre, y que el camino hasta él está escondido en algún rincón del pueblo.',
   'Si tienes prisa, pulsa Esc o «Menú» y lo verás todo en la vista rápida.',
 ];
 const HOST_LINES_AFTER = [
@@ -29,7 +29,17 @@ const LEVER_DONE = ['La palanca ya está bajada. El puente sigue en su sitio.'];
 const BRIDGE_MS = 450;
 const CHEST_LINES = ['¡Has encontrado un pergamino!', 'Es el CV de Ángel en PDF. ¿Te lo llevas?'];
 
-const PROMPTS = { door: 'Entrar', npc: 'Hablar', sign: 'Leer', chest: 'Abrir', lever: 'Tirar' };
+const PROMPTS = { door: 'Entrar', npc: 'Hablar', sign: 'Leer', chest: 'Abrir', lever: 'Tirar', bush: 'Examinar' };
+const BUSH_LINES = [
+  ['Solo hay hojas.'],
+  ['Una mariquita te mira. Nada más.'],
+  ['Ramas, hojas y algún bicho. Aquí no hay nada.'],
+  ['Huele a hierba recién cortada, pero no hay nada.'],
+];
+const LEVER_FOUND = ['Apartas las ramas… ¡hay una palanca escondida!'];
+
+// El indicador muestra la tecla que se usa: Enter con teclado, A con la cruceta táctil.
+const touchFirst = () => window.matchMedia?.('(pointer: coarse)').matches;
 
 // Escala entera para que los píxeles se vean nítidos; en pantallas estrechas la cámara sigue al héroe.
 function useViewport(ref) {
@@ -69,9 +79,20 @@ export default function Town({ places, onMenu }) {
   const [dialog, setDialog] = useState(null);
   const [place, setPlace] = useState(null);
   const [sound, setSoundState] = useState(loadPreference);
+  const [musicOn, setMusicState] = useState(loadMusicPreference);
+  const [touch, setTouch] = useState(touchFirst);
+  useEffect(() => {
+    const key = () => setTouch(false);
+    const pointer = (e) => setTouch(e.pointerType === 'touch');
+    window.addEventListener('keydown', key);
+    window.addEventListener('pointerdown', pointer);
+    return () => { window.removeEventListener('keydown', key); window.removeEventListener('pointerdown', pointer); };
+  }, []);
+  const toggleMusic = () => { const on = !musicOn; setMusicState(on); setMusic(on); };
 
   useEffect(() => {
-    world.bridge = false; // cada partida empieza sin puente
+    // Cada partida empieza sin puente y con la palanca escondida.
+    world.bridge = false; world.leverFound = false; world.searched = new Set();
     const off = resumeOnGesture();
     return () => { off(); stopAll(); };
   }, []);
@@ -122,6 +143,15 @@ export default function Town({ places, onMenu }) {
     if (cell?.kind === 'door') enter(cell.building);
     else if (cell?.kind === 'npc') { s.talked = true; play('talk'); setDialog({ speaker: profile.name.split(' ')[0], lines: s.leverT0 ? HOST_LINES_AFTER : HOST_LINES }); }
     else if (cell?.kind === 'sign') { play('page'); setDialog({ speaker: cell.sign.title, lines: cell.sign.lines }); }
+    else if (cell?.kind === 'bush') {
+      play('rustle');
+      s.rustle = { index: cell.index, t0: performance.now() };
+      if (cell.lever) { world.leverFound = true; setDialog({ speaker: 'Arbusto', lines: LEVER_FOUND }); }
+      else {
+        world.searched.add(cell.index);
+        setDialog({ speaker: 'Arbusto', lines: BUSH_LINES[cell.index % BUSH_LINES.length] });
+      }
+    }
     else if (cell?.kind === 'lever') {
       if (s.leverT0) return setDialog({ speaker: 'Palanca', lines: LEVER_DONE });
       s.leverT0 = performance.now();
@@ -200,7 +230,15 @@ export default function Town({ places, onMenu }) {
       const bridge = !s.leverT0 ? 0 : still ? BRIDGE.length : Math.min(BRIDGE.length, Math.max(0, (now - s.leverT0 - 400) / BRIDGE_MS));
       if (bridge >= BRIDGE.length) world.bridge = true;
       drawBridge(g, bridge, camX, camY);
-      drawLever(g, LEVER.x * TILE - camX, LEVER.y * TILE - camY, Boolean(s.leverT0));
+      if (world.leverFound) drawLever(g, LEVER.x * TILE - camX, LEVER.y * TILE - camY, Boolean(s.leverT0));
+      BUSHES.forEach(([bx, by], i) => {
+        const isLever = bx === LEVER.x && by === LEVER.y;
+        const k = s.rustle?.index === i ? (now - s.rustle.t0) / 400 : 1;
+        const shake = k < 1 && !still ? Math.round(Math.sin(k * Math.PI * 6) * 2 * (1 - k)) : 0;
+        // El arbusto de la palanca se aparta a un lado al descubrirla.
+        if (isLever && world.leverFound) { if (k < 1) drawBush(g, bx * TILE - camX + Math.round(k * 10), by * TILE - camY, 0); return; }
+        drawBush(g, bx * TILE - camX, by * TILE - camY, shake);
+      });
       drawChest(g, CHEST.x * TILE - camX, CHEST.y * TILE - camY, s.chestOpen);
       if (!s.chestOpen && !still) drawGlint(g, time, CHEST.x * TILE - camX, CHEST.y * TILE - camY);
       drawPuffs(g, s.puffs, now, camX, camY);
@@ -302,6 +340,7 @@ export default function Town({ places, onMenu }) {
         <h1 className="town-title">Villa Portafolio</h1>
         <div className="town-actions">
           <button type="button" className="btn" aria-pressed={sound} onClick={toggleSound}>Sonido: {sound ? 'sí' : 'no'}</button>
+          {sound && <button type="button" className="btn" aria-pressed={musicOn} onClick={toggleMusic}>Música: {musicOn ? 'sí' : 'no'}</button>}
           <button type="button" className="btn" onClick={onMenu}>Menú <span className="muted small">(Esc)</span></button>
         </div>
       </header>
@@ -318,7 +357,7 @@ export default function Town({ places, onMenu }) {
         />
         {prompt && !dialog && !place && (
           <button type="button" className="town-prompt" onClick={interact}>
-            <span className="town-key">A</span> {prompt}
+            <span className="town-key">{touch ? 'A' : 'Enter'}</span> {prompt}
           </button>
         )}
         {dialog && <TownDialog {...dialog} onClose={() => setDialog(null)} />}
