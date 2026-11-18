@@ -115,6 +115,31 @@ function App() {
         if (element) element.scrollIntoView({ behavior: 'smooth' });
     };
 
+    const [activeSection, setActiveSection] = useState('game-hero');
+
+    // 2. El Observador que detecta el scroll
+    useEffect(() => {
+        const sections = document.querySelectorAll('section');
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach((entry) => {
+                // Si la sección es visible al 30% en pantalla, la marcamos como activa
+                if (entry.isIntersecting) {
+                    setActiveSection(entry.target.id);
+                }
+            });
+        }, {
+            threshold: 0.3, // Se activa cuando el 30% de la sección es visible
+            rootMargin: "-10% 0px -10% 0px" // Reduce un poco el margen de detección para ser más preciso
+        });
+
+        sections.forEach((section) => {
+            observer.observe(section);
+        });
+
+        return () => observer.disconnect();
+    }, []);
+
     return (
         <div className="App">
 
@@ -128,22 +153,48 @@ function App() {
                         fontSize: '1rem',
                         textShadow: '3px 3px 0 #000'
                     }}>
-                        PKMN_DEV.sav
+                        ANGEL_DEV.sav
                     </div>
 
                     <div style={{ display: 'flex', gap: '5px' }}>
-                        {/* Botones siguen igual */}
-                        <button className="retro-btn" onClick={() => scrollTo('game-hero')}>START</button>
-                        <button className="retro-btn" onClick={() => scrollTo('profile')}>PERFIL</button>
-                        <button className="retro-btn" onClick={() => scrollTo('education')}>EXP</button>
-                        <button className="retro-btn" onClick={() => scrollTo('skills')}>SKILLS</button>
-                        <button className="retro-btn" onClick={() => scrollTo('projects')}>MISIONES</button>
+
+                        <button
+                            className={`retro-btn ${activeSection === 'game-hero' ? 'nav-active' : ''}`}
+                            onClick={() => scrollTo('game-hero')}>
+                            START
+                        </button>
+
+                        <button
+                            className={`retro-btn ${activeSection === 'profile' ? 'nav-active' : ''}`}
+                            onClick={() => scrollTo('profile')}>
+                            PERFIL
+                        </button>
+
+                        <button
+                            /* CAMBIO AQUÍ: Añadimos la condición || activeSection === 'experience' */
+                            className={`retro-btn ${(activeSection === 'education' || activeSection === 'experience') ? 'nav-active' : ''}`}
+                            onClick={() => scrollTo('education')}>
+                            EXP
+                        </button>
+
+                        <button
+                            className={`retro-btn ${activeSection === 'skills' ? 'nav-active' : ''}`}
+                            onClick={() => scrollTo('skills')}>
+                            SKILLS
+                        </button>
+
+                        <button
+                            className={`retro-btn ${activeSection === 'projects' ? 'nav-active' : ''}`}
+                            onClick={() => scrollTo('projects')}>
+                            MISIONES
+                        </button>
+
                     </div>
                 </div>
             </nav>
 
             {/* 2. HERO SECTION (JUEGO PANTALLA COMPLETA) */}
-            <section id="game-hero" className="full-screen-hero">
+            {/* <section id="game-hero" className="full-screen-hero">
                 <div id="phaser-container" style={{ width: '100%', height: '100%', position: 'absolute', top: 0, left: 0 }}>
                     <div style={{
                         width: '100%', height: '100%',
@@ -162,160 +213,171 @@ function App() {
                     <p>SCROLL TO EXPLORE</p>
                     ▼
                 </div>
+            </section> */}
+
+            <section id="game-hero" className="full-screen-hero" style={{ position: 'relative' }}>
+                {/* Fondo con un patrón de rejilla sutil en movimiento */}
+                <div style={{
+                    position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
+                    background: '#111',
+                    backgroundImage: 'linear-gradient(rgba(50, 255, 50, 0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(50, 255, 50, 0.1) 1px, transparent 1px)',
+                    backgroundSize: '30px 30px',
+                    opacity: 0.5,
+                    zIndex: 1
+                }}></div>
+
+                <div id="phaser-container" style={{ width: '100%', height: '100%', position: 'relative', zIndex: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', padding: '20px' }}>
+
+                    {/* Icono de "En Construcción" */}
+                    <div style={{ fontSize: '4rem', marginBottom: '20px', filter: 'drop-shadow(0 0 10px rgba(255,255,255,0.5))' }}>
+                        🚧👾🚧
+                    </div>
+
+                    {/* Título con efecto glitch */}
+                    <h1 className="crt-text" style={{
+                        color: '#fff',
+                        textAlign: 'center',
+                        marginBottom: '30px',
+                        fontFamily: "'Press Start 2P', cursive",
+                        fontSize: '1.8rem',
+                        lineHeight: '1.5',
+                        textShadow: '3px 3px 0 #ff0000, -3px -3px 0 #0000ff' /* Efecto 3D anaglifo */
+                    }}>
+                        [ WORK IN PROGRESS ]
+                    </h1>
+
+                    {/* Caja de texto explicativa */}
+                    <div className="retro-box" style={{ maxWidth: '600px', background: 'rgba(0,0,0,0.8)', border: '2px solid #fff', color: '#fff', textAlign: 'center' }}>
+                        <p style={{ fontFamily: "'VT323', monospace", fontSize: '1.4rem', margin: '0 0 15px 0' }}>
+                     > SYSTEM MESSAGE:
+                        </p>
+                        <p style={{ marginBottom: '20px', lineHeight: '1.6' }}>
+                            El desarrollador está actualmente farmeando XP y picando código para crear esta zona.
+                            <br /><br />
+                            <span style={{ color: 'var(--pkmn-yellow)' }}>ETA: PRÓXIMAMENTE™</span>
+                        </p>
+                        <p style={{ fontSize: '0.9rem', opacity: 0.8 }}>
+                            Mientras tanto, accede a los datos guardados abajo.
+                        </p>
+                    </div>
+                </div>
+
+                <div className="scroll-indicator" onClick={() => scrollTo('profile')} style={{ zIndex: 3 }}>
+                    <p style={{ marginBottom: '10px', background: 'rgba(0,0,0,0.5)', padding: '5px' }}>ACCEDER A LOS DATOS</p>
+                    ▼
+                </div>
             </section>
 
+            <div style={{
+                height: '24px',
+                width: '100%',
+                /* Patrón de rayas amarillas y negras (Construction Tape) */
+                background: 'repeating-linear-gradient(45deg, #ffde00, #ffde00 20px, #111 20px, #111 40px)',
+                borderTop: '4px solid #000',
+                borderBottom: '4px solid #000',
+                position: 'relative',
+                zIndex: 25 /* Para que quede por encima de todo */
+            }}></div>
 
             {/* 3. CONTENIDO PRINCIPAL */}
-            <div className="container" style={{ position: 'relative', background: 'var(--bg-color)', zIndex: 20 }}>
-
+            <div className="container" style={{ position: 'relative', background: 'var(--bg-color)', zIndex: 20, paddingTop: 0 }}>
                 {/* --- PERFIL (TRAINER CARD) --- */}
-                <section id="profile" style={{ paddingTop: '100px' }}>
-                    <h2 className="section-title"> CARGAR_PERFIL_JUGADOR</h2>
-
+                <section id="profile" style={{ paddingTop: '30px' }}>
                     {/* Contenedor principal sin padding para manejar la cabecera roja */}
                     <ScrollReveal>
-                        <div className="retro-box" style={{ padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+                        {/* --- PERFIL (TRAINER CARD) CORREGIDO --- */}
+                        <section id="profile" style={{ paddingTop: '100px' }}>
+                            <h2 className="section-title" style={{ marginTop: 0 }}>
+                               > CARGAR_PERFIL_JUGADOR
+                            </h2>
 
-                            {/* CABECERA ROJA TIPO TARJETA */}
-                            <div style={{
-                                background: '#cc0000',
-                                color: 'white',
-                                padding: '15px 25px',
-                                display: 'flex',
-                                justifyContent: 'space-between',
-                                alignItems: 'center',
-                                borderBottom: '4px solid #000'
-                            }}>
-                                <span style={{ fontFamily: "'Press Start 2P', cursive", fontSize: '1rem', textShadow: '2px 2px 0 #000' }}>
-                                    TRAINER CARD
-                                </span>
-                                <span style={{ fontFamily: "'VT323', monospace", fontSize: '1.4rem', fontWeight: 'bold' }}>
-                                    ID No. 84920
-                                </span>
-                            </div>
+                            <div className="retro-box" style={{ padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
 
-                            {/* CUERPO DE LA TARJETA */}
-                            <div style={{ display: 'flex', gap: '40px', padding: '30px', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center' }}>
-
-                                {/* IZQUIERDA: AVATAR + NOMBRE JUGADOR */}
-                                <div classname="sprite-float" style={{ textAlign: 'center' }}>
-                                    <div style={{
-                                        width: '160px',
-                                        height: '160px',
-                                        background: '#f0f0f0',
-                                        border: '4px solid #222',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        marginBottom: '15px',
-                                        boxShadow: '6px 6px 0 rgba(0,0,0,0.2)'
-                                    }}>
-                                        {/* Aquí iría tu foto real: <img src="foto.jpg" ... /> */}
-                                        <span style={{ fontSize: '4rem' }}>😎</span>
-                                    </div>
-
-                                    <div style={{
-                                        background: '#222',
-                                        color: 'white',
-                                        padding: '8px 15px',
-                                        fontFamily: "'Press Start 2P', cursive",
-                                        fontSize: '0.7rem',
-                                        borderRadius: '4px',
-                                        display: 'inline-block'
-                                    }}>
-                                        JUGADOR 1
-                                    </div>
-                                </div>
-
-                                {/* DERECHA: DATOS Y BIO */}
-                                <div style={{ flex: 1, minWidth: '280px' }}>
-
-                                    <h1 style={{
-                                        fontFamily: "'Press Start 2P', cursive",
-                                        fontSize: '1.5rem',
-                                        margin: '0 0 25px 0',
-                                        color: '#000',
-                                        lineHeight: '1.5',
-                                        minHeight: '1.5em'
-                                    }}>
-                                        <Typewriter text="[TU NOMBRE]" speed={100} />
-                                    </h1>
-
-                                    {/* GRID DE ESTADÍSTICAS */}
-                                    <div style={{
-                                        display: 'grid',
-                                        gridTemplateColumns: 'auto 1fr',
-                                        gap: '10px 20px',
-                                        fontFamily: "'VT323', monospace",
-                                        fontSize: '1.3rem',
-                                        marginBottom: '25px'
-                                    }}>
-                                        <strong style={{ color: '#666' }}>CLASE:</strong>
-                                        <span style={{ fontWeight: 'bold' }}>Full Stack Developer</span>
-
-                                        <strong style={{ color: '#666' }}>NIVEL:</strong>
-                                        <span style={{ color: 'var(--pkmn-blue)', fontWeight: 'bold' }}>Junior Lvl. 1</span>
-
-                                        <strong style={{ color: '#666' }}>SERVER:</strong>
-                                        <span>España (Remote/Hybrid)</span>
-
-                                        <strong style={{ color: '#666' }}>DINERO:</strong>
-                                        <span>$ 0 (Necesita Empleo)</span>
-                                    </div>
-
-                                    {/* CAJA DE TEXTO PARA BIO */}
-                                    <div style={{
-                                        background: '#eee',
-                                        border: '2px dashed #999',
-                                        padding: '15px',
-                                        borderRadius: '6px',
-                                        fontStyle: 'italic',
-                                        fontSize: '1.1rem',
-                                        color: '#444'
-                                    }}>
-                                        "Desarrollador apasionado por crear soluciones eficientes. Transformo café en código limpio y escalable. ¡Listo para la aventura!"
-                                    </div>
-
-                                </div>
-
+                                {/* CABECERA ROJA */}
                                 <div style={{
-                                    marginTop: '30px',
-                                    display: 'flex',
-                                    gap: '15px',
-                                    justifyContent: 'center',
-                                    flexWrap: 'wrap' /* Importante para móvil */
+                                    background: '#cc0000', color: 'white', padding: '15px 25px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '4px solid #000'
                                 }}>
-                                    {/* Botón Principal: CV (Guardar Partida) */}
-                                    <a href="/cv_angel_garcia.pdf" download style={{ textDecoration: 'none' }}>
-                                        <button className="retro-btn" style={{
-                                            background: 'var(--pkmn-yellow)', /* Amarillo para destacar */
-                                            color: '#000',
-                                            display: 'flex', alignItems: 'center', gap: '8px'
-                                        }}>
-                                            💾 GUARDAR DATOS (CV)
-                                        </button>
-                                    </a>
-
-                                    {/* LinkedIn */}
-                                    <a href="https://www.linkedin.com/in/TU_USUARIO" target="_blank" rel="noreferrer" style={{ textDecoration: 'none' }}>
-                                        <button className="retro-btn">LINKEDIN</button>
-                                    </a>
-
-                                    {/* GitHub */}
-                                    <a href="https://github.com/TU_USUARIO" target="_blank" rel="noreferrer" style={{ textDecoration: 'none' }}>
-                                        <button className="retro-btn">GITHUB</button>
-                                    </a>
+                                    <span style={{ fontFamily: "'Press Start 2P', cursive", fontSize: '1rem', textShadow: '2px 2px 0 #000' }}>TRAINER CARD</span>
+                                    <span style={{ fontFamily: "'VT323', monospace", fontSize: '1.4rem', fontWeight: 'bold' }}>ID No. 070804</span>
                                 </div>
 
-                            </div>
+                                {/* CUERPO TARJETA */}
+                                <div style={{ display: 'flex', gap: '40px', padding: '30px', flexWrap: 'wrap', alignItems: 'flex-start', justifyContent: 'center' }}>
 
-                        </div>
+                                    {/* COLUMNA IZQUIERDA: AVATAR */}
+                                    <div style={{ textAlign: 'center' }}>
+                                        <div className="sprite-float" style={{
+                                            width: '160px', height: '160px', background: '#f0f0f0', border: '4px solid #222', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '15px', boxShadow: '6px 6px 0 rgba(0,0,0,0.2)'
+                                        }}>
+                                            <span style={{ fontSize: '4rem' }}>😎</span>
+                                        </div>
+                                        <div style={{ background: '#222', color: 'white', padding: '8px 15px', fontFamily: "'Press Start 2P', cursive", fontSize: '0.7rem', borderRadius: '4px', display: 'inline-block' }}>
+                                            JUGADOR 1
+                                        </div>
+                                    </div>
+
+                                    {/* COLUMNA DERECHA: DATOS + BIO + BOTONES */}
+                                    <div style={{ flex: 1, minWidth: '280px', display: 'flex', flexDirection: 'column' }}>
+
+                                        {/* NOMBRE */}
+                                        <h1 style={{ fontFamily: "'Press Start 2P', cursive", fontSize: '1.5rem', margin: '0 0 25px 0', color: '#000', lineHeight: '1.5' }}>
+                                            <Typewriter text="Ángel García Lopezlira" speed={100} />
+                                        </h1>
+
+                                        {/* STATS */}
+                                        <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '10px 20px', fontFamily: "'VT323', monospace", fontSize: '1.3rem', marginBottom: '25px' }}>
+                                            <strong style={{ color: '#666' }}>CLASE:</strong><span style={{ fontWeight: 'bold' }}>Estudiante de Ingeniería del Software</span>
+                                            <strong style={{ color: '#666' }}>NIVEL:</strong><span style={{ color: 'var(--pkmn-blue)', fontWeight: 'bold' }}>Lvl. 21</span>
+                                            <strong style={{ color: '#666' }}>SERVER:</strong><span>España (Remote/Hybrid)</span>
+                                            <strong style={{ color: '#666' }}>QUEST:</strong>
+                                            <span style={{ color: '#28a745', fontWeight: 'bold', animation: 'blink-animation 2s infinite' }}>Open to Work</span>
+                                        </div>
+
+                                        {/* BIO BOX */}
+                                        <div style={{ background: '#eee', border: '2px dashed #999', padding: '15px', borderRadius: '6px', fontStyle: 'italic', fontSize: '1.1rem', color: '#444', marginBottom: '25px' }}>
+                                            "Estudiante de Ingeniería Informática con muchas ganas de aprender y crear soluciones para problemas reales. Apasionado por la tecnología, soy una persona curiosa y dedicada. Capaz de trabajar en equipo y adaptarme a entornos ágiles. Busco un equipo donde desplegar mi código y subir de nivel. 🚀"
+                                        </div>
+
+                                        {/* BOTONES (AHORA ABAJO DEL TODO Y ORDENADOS) */}
+                                        <div style={{
+                                            display: 'flex',
+                                            gap: '15px',
+                                            flexWrap: 'wrap',
+                                            justifyContent: 'flex-start' /* Alineados a la izquierda junto al texto */
+                                        }}>
+                                            {/* Botón Principal: CV */}
+                                            <a href="/cv" style={{ textDecoration: 'none' }}>
+                                                <button className="retro-btn" style={{
+                                                    background: 'var(--pkmn-yellow)',
+                                                    color: '#000',
+                                                    display: 'flex', alignItems: 'center', gap: '8px',
+                                                    padding: '10px 15px'
+                                                }}>
+                                                    💾 VER CV
+                                                </button>
+                                            </a>
+
+                                            {/* LinkedIn */}
+                                            <a href="https://linkedin.com/in/TU_USUARIO" target="_blank" rel="noreferrer" style={{ textDecoration: 'none' }}>
+                                                <button className="retro-btn" style={{ padding: '10px 15px' }}>LINKEDIN</button>
+                                            </a>
+
+                                            {/* GitHub */}
+                                            <a href="https://github.com/TU_USUARIO" target="_blank" rel="noreferrer" style={{ textDecoration: 'none' }}>
+                                                <button className="retro-btn" style={{ padding: '10px 15px' }}>GITHUB</button>
+                                            </a>
+                                        </div>
+
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
                     </ScrollReveal>
                 </section>
 
                 {/* --- FORMACIÓN (Logs de Entrenamiento) --- */}
                 <section id="education">
-                    <h2 className="section-title"> LOGS_DE_ENTRENAMIENTO (FORMACIÓN)</h2>
+                    <h2 className="section-title">> LOGS_DE_ENTRENAMIENTO (FORMACIÓN)</h2>
 
                     <div style={{ display: 'grid', gap: '25px' }}>
 
@@ -323,7 +385,7 @@ function App() {
                         <ScrollReveal>
                             <div className="retro-box" style={{ display: 'flex', gap: '20px', alignItems: 'flex-start' }}>
 
-                                {/* ICONO (Logro Desbloqueado) */}
+                                {/* LOGO UCLM */}
                                 <div style={{
                                     background: 'var(--pkmn-yellow)',
                                     border: '3px solid #000',
@@ -332,16 +394,27 @@ function App() {
                                     display: 'flex',
                                     alignItems: 'center',
                                     justifyContent: 'center',
-                                    fontSize: '1.8rem',
                                     flexShrink: 0,
-                                    boxShadow: '4px 4px 0 rgba(0,0,0,0.2)'
+                                    boxShadow: '4px 4px 0 rgba(0,0,0,0.2)',
+                                    borderRadius: '8px'
                                 }}>
-                                    🎓
+                                    <img
+                                        src="LogoUCLM.jpg" // Asegúrate que esta imagen existe
+                                        alt="Logo UCLM"
+                                        style={{
+                                            width: '70%',
+                                            height: '70%',
+                                            objectFit: 'contain',
+                                            mixBlendMode: 'multiply',
+                                            filter: 'grayscale(100%) contrast(150%)'
+                                        }}
+                                    />
                                 </div>
 
+                                {/* TEXTO UCLM */}
                                 <div style={{ flex: 1 }}>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', marginBottom: '10px' }}>
-                                        <h3 style={{ margin: 0, fontSize: '1.2rem', fontFamily: "'Press Start 2P', cursive" }}>Ingeniería Informática</h3>
+                                        <h3 style={{ margin: 0, fontSize: '1.2rem', fontFamily: "'Press Start 2P', cursive" }}>Grado en Ingeniería Informática</h3>
                                         {/* BADGE DE FECHA */}
                                         <span style={{
                                             background: '#222',
@@ -352,7 +425,7 @@ function App() {
                                             border: '2px solid #000',
                                             borderRadius: '4px'
                                         }}>
-                                            2019 - 2023
+                                            2022-2026
                                         </span>
                                     </div>
 
@@ -362,55 +435,71 @@ function App() {
 
                                     <ul style={{ paddingLeft: '20px', margin: 0, color: '#222', fontSize: '1rem', listStyleType: 'square' }}>
                                         <li style={{ marginBottom: '5px' }}>Especialidad en Ingeniería del Software.</li>
-                                        <li>Mención Honorífica en Trabajo de Fin de Grado.</li>
                                     </ul>
                                 </div>
                             </div>
                         </ScrollReveal>
 
-                        {/* ITEM 2: CURSO */}
+                        {/* ITEM 2: INSTITUTO (IES BERNARDO DE BALBUENA) */}
                         <ScrollReveal>
-                            <div className="retro-box" style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
+                            <div className="retro-box" style={{ display: 'flex', gap: '20px', alignItems: 'flex-start' }}>
 
-                                {/* ICONO */}
+                                {/* LOGO INSTITUTO */}
                                 <div style={{
-                                    background: 'var(--pkmn-blue)',
+                                    background: 'var(--pkmn-yellow)',
                                     border: '3px solid #000',
                                     width: '60px',
                                     height: '60px',
                                     display: 'flex',
                                     alignItems: 'center',
                                     justifyContent: 'center',
-                                    fontSize: '1.8rem',
                                     flexShrink: 0,
-                                    boxShadow: '4px 4px 0 rgba(0,0,0,0.2)'
+                                    boxShadow: '4px 4px 0 rgba(0,0,0,0.2)',
+                                    borderRadius: '8px'
                                 }}>
-                                    ⚡
+                                    <img
+                                        /* ⚠️ AQUÍ PONES LA RUTA DE TU IMAGEN NUEVA */
+                                        src="logo_bernardo_balbuena.jpg"
+                                        alt="Logo IES Bernardo de Balbuena"
+                                        style={{
+                                            width: '75%',
+                                            height: '75%',
+                                            objectFit: 'contain',
+                                            mixBlendMode: 'multiply', /* Esto quita el fondo blanco del cuadrado del logo */
+                                            filter: 'grayscale(100%) contrast(150%)' /* Efecto retro */
+                                        }}
+                                    />
                                 </div>
 
+                                {/* TEXTO INSTITUTO */}
                                 <div style={{ flex: 1 }}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', marginBottom: '5px' }}>
-                                        <h3 style={{ margin: 0, fontSize: '1.2rem', fontFamily: "'Press Start 2P', cursive" }}>React & Node Avanzado</h3>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', marginBottom: '10px' }}>
+                                        <h3 style={{ margin: 0, fontSize: '1.2rem', fontFamily: "'Press Start 2P', cursive" }}>Bachillerato de Ciencias</h3>
+                                        {/* BADGE DE FECHA (Calculada aprox basada en tu inicio de uni) */}
                                         <span style={{
-                                            background: '#ddd',
-                                            color: '#000',
+                                            background: '#222',
+                                            color: '#fff',
                                             padding: '5px 10px',
                                             fontFamily: "'VT323', monospace",
                                             fontSize: '1rem',
                                             border: '2px solid #000',
                                             borderRadius: '4px'
                                         }}>
-                                            2024
+                                            2020-2022
                                         </span>
                                     </div>
 
-                                    <h4 style={{ margin: 0, color: '#444', fontFamily: "'VT323', monospace", fontSize: '1.2rem' }}>
-                                        Certificación Online (Udemy)
+                                    <h4 style={{ margin: '0 0 10px 0', color: '#444', fontFamily: "'Press Start 2P', cursive", fontSize: '0.8rem' }}>
+                                        I.E.S. Bernardo de Balbuena
                                     </h4>
+
+                                    <ul style={{ paddingLeft: '20px', margin: 0, color: '#222', fontSize: '1rem', listStyleType: 'square' }}>
+                                        <li style={{ marginBottom: '5px' }}>Itinerario Tecnológico.</li>
+                                        <li style={{ marginBottom: '5px' }}>Nota media: 9.</li>
+                                    </ul>
                                 </div>
                             </div>
                         </ScrollReveal>
-
                     </div>
                 </section>
 
@@ -426,13 +515,15 @@ function App() {
                                 src="dino.gif"
                                 alt="Gameplay del Dinosaurio"
                                 style={{
-                                    maxWidth: '350px',
-                                    width: '100%',
+                                    maxWidth: '100%',
+                                    width: '350px',
                                     height: 'auto',
                                     imageRendering: 'pixelated',
                                     marginBottom: '25px',
                                     border: '3px solid #000',
-                                    backgroundColor: '#fff'
+                                    backgroundColor: '#fff', /* El fondo blanco del contenedor tapará cualquier imperfección */
+                                    display: 'block',        /* Asegura que no tenga márgenes extraños */
+                                    margin: '0 auto 25px auto' /* Centrado horizontal */
                                 }}
                             />
 
@@ -624,6 +715,65 @@ function App() {
                             </div>
                         </ScrollReveal>
 
+                        <ScrollReveal>
+                            <div className="retro-box project-card">
+
+                                {/* PANTALLA TIPO TERMINAL (BACKEND FOCUS) */}
+                                <div style={{
+                                    border: '3px solid #000',
+                                    background: '#1a1a1a', /* Fondo casi negro */
+                                    height: '180px',
+                                    marginBottom: '20px',
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    justifyContent: 'center',
+                                    padding: '20px',
+                                    position: 'relative',
+                                    borderRadius: '4px',
+                                    boxShadow: 'inset 0 0 15px rgba(0,255,0,0.1)', /* Resplandor verde hacker sutil */
+                                    fontFamily: "'VT323', monospace"
+                                }}>
+                                    {/* Etiqueta de Arquitectura */}
+                                    <div style={{
+                                        position: 'absolute', bottom: '10px', right: '10px',
+                                        background: '#fff', color: 'black',
+                                        padding: '2px 6px',
+                                        border: '2px solid black', fontSize: '0.7rem',
+                                        fontFamily: "'Press Start 2P', cursive"
+                                    }}>
+                                        BACKEND ARCH
+                                    </div>
+                                </div>
+
+                                {/* TÍTULO Y DESCRIPCIÓN */}
+                                <h3 style={{ color: '#000', marginTop: 0, fontFamily: "'Press Start 2P', cursive", fontSize: '1rem', lineHeight: '1.5' }}>
+                                    ESIMEDIA: Microservices
+                                </h3>
+
+                                <p style={{ fontSize: '0.95rem' }}>
+                                    Plataforma VOD escalable diseñada con arquitectura de microservicios. Enfoque total en seguridad (RBAC, OWASP), calidad (TDD) y despliegue automatizado.
+                                </p>
+
+                                {/* STACK TECNOLÓGICO (DESTACANDO JAVA 21) */}
+                                <div style={{ marginBottom: '20px', borderTop: '2px dashed #ccc', paddingTop: '10px' }}>
+                                    <span style={{ fontWeight: 'bold', fontFamily: "'Press Start 2P', cursive", fontSize: '0.7rem' }}>CORE STACK:</span>
+                                    <div style={{ fontSize: '1.1rem', color: '#000', fontFamily: "'VT323', monospace", marginTop: '5px', fontWeight: 'bold' }}>
+                                        Java 21 • Spring Boot 3 • Security • Docker • CI/CD
+                                    </div>
+                                </div>
+
+                                <div style={{ display: 'flex', gap: '10px' }}>
+                                    <a href="ENLACE_AL_REPO_BACKEND" target="_blank" rel="noreferrer" className="retro-btn" style={{ flex: 1, fontSize: '0.8rem', textAlign: 'center' }}>
+                                        VER REPO
+                                    </a>
+                                    {/* Si tienes documentación pública o Swagger, este botón es genial */}
+                                    <a href="ENLACE_DOCS_O_SWAGGER" target="_blank" rel="noreferrer" className="retro-btn" style={{ flex: 1, fontSize: '0.8rem', textAlign: 'center', background: '#ddd' }}>
+                                        DOCS
+                                    </a>
+                                </div>
+
+                            </div>
+                        </ScrollReveal>
                     </div>
                 </section>
 
@@ -644,8 +794,8 @@ function App() {
                     <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', marginBottom: '20px', flexWrap: 'wrap' }}>
 
                         {/* Añadimos aquí también el CV */}
-                        <a href="/cv_angel_garcia.pdf" download className="retro-btn" style={{ textDecoration: 'none', fontSize: '0.7rem', background: '#ffde00', color: '#000' }}>
-                            💾 GUARDAR (CV)
+                        <a href="/cv" className="retro-btn" style={{ textDecoration: 'none', fontSize: '0.7rem', background: '#ffde00', color: '#000' }}>
+                            💾 VER CV
                         </a>
 
                         <a href="https://www.linkedin.com/in/TU_USUARIO" target="_blank" rel="noreferrer" className="retro-btn" style={{ textDecoration: 'none', fontSize: '0.7rem' }}>
