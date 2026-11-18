@@ -99,16 +99,51 @@ export function play(name) {
 
 export function stopAll() { stopMusic(); enabled = false; }
 
-// ---- Música: bucle de 8 compases (Do – Lam – Fa – Sol) con onda cuadrada y bajo triangular ----
-const LEAD = [
-  72, 76, 79, 76, 74, 76, 72, 0, 69, 72, 76, 72, 71, 72, 69, 0,
-  65, 69, 72, 77, 76, 74, 72, 0, 71, 74, 79, 77, 76, 74, 71, 0,
-  76, 0, 79, 0, 77, 76, 74, 72, 72, 0, 76, 0, 74, 72, 71, 69,
-  69, 72, 77, 76, 74, 72, 69, 72, 71, 0, 74, 0, 79, 77, 74, 71,
-];
-const ROOTS = [48, 45, 41, 43, 48, 45, 41, 43];
-const EIGHTH = 60 / 112 / 2;
+// ---- Música: tres bucles propios de 8 compases en corcheas (0 = silencio) ----
+const THEMES = {
+  // Día: Do – Lam – Fa – Sol, onda cuadrada alegre.
+  day: {
+    tempo: 112, lead: 'square', leadVol: 0.5, bass: 'triangle', bassVol: 0.9, bassEvery: 2,
+    notes: [
+      72, 76, 79, 76, 74, 76, 72, 0, 69, 72, 76, 72, 71, 72, 69, 0,
+      65, 69, 72, 77, 76, 74, 72, 0, 71, 74, 79, 77, 76, 74, 71, 0,
+      76, 0, 79, 0, 77, 76, 74, 72, 72, 0, 76, 0, 74, 72, 71, 69,
+      69, 72, 77, 76, 74, 72, 69, 72, 71, 0, 74, 0, 79, 77, 74, 71,
+    ],
+    roots: [48, 45, 41, 43, 48, 45, 41, 43],
+  },
+  // Noche: nana en La menor, lenta y con onda triangular suave.
+  night: {
+    tempo: 76, lead: 'triangle', leadVol: 0.85, bass: 'sine', bassVol: 0.7, bassEvery: 4,
+    notes: [
+      69, 0, 72, 0, 76, 0, 72, 0, 65, 0, 69, 0, 72, 0, 77, 76,
+      72, 0, 76, 0, 79, 0, 76, 0, 71, 0, 74, 0, 79, 0, 0, 0,
+      76, 0, 0, 74, 72, 0, 69, 0, 72, 0, 0, 69, 65, 0, 69, 72,
+      76, 0, 74, 0, 72, 0, 67, 0, 68, 0, 71, 0, 76, 0, 0, 0,
+    ],
+    roots: [45, 41, 48, 43, 45, 41, 48, 40],
+  },
+  // Combate: Mi menor rápido, arpegios y bajo en cada corchea.
+  battle: {
+    tempo: 152, lead: 'square', leadVol: 0.42, bass: 'triangle', bassVol: 1, bassEvery: 1,
+    notes: [
+      76, 79, 83, 79, 76, 79, 83, 88, 76, 79, 84, 79, 76, 79, 84, 88,
+      78, 81, 86, 81, 78, 81, 86, 90, 83, 0, 83, 82, 83, 0, 75, 78,
+      88, 0, 86, 0, 83, 0, 79, 81, 84, 0, 83, 0, 79, 0, 76, 79,
+      81, 0, 79, 0, 78, 0, 74, 78, 75, 78, 81, 83, 87, 0, 0, 0,
+    ],
+    roots: [40, 36, 38, 35, 40, 36, 38, 35],
+  },
+};
 const freq = (m) => 440 * 2 ** ((m - 69) / 12);
+let theme = 'day';
+
+// Cambia de tema (día, noche o combate); si la música está sonando, enlaza con el nuevo.
+export function setTheme(name) {
+  if (name === theme || !THEMES[name]) return;
+  theme = name;
+  if (music) { stopMusic(); startMusic(); }
+}
 
 function note(type, midi, at, dur, vol, dest = musicGain) {
   const o = ctx.createOscillator(), g = ctx.createGain();
@@ -123,16 +158,19 @@ function note(type, midi, at, dur, vol, dest = musicGain) {
 
 function startMusic() {
   if (music || !ctx) return;
+  const th = THEMES[theme];
+  const eighth = 60 / th.tempo / 2;
   let step = 0, next = ctx.currentTime + 0.1;
   const tick = () => {
     while (next < ctx.currentTime + 0.3) {
-      const i = step % LEAD.length;
-      if (LEAD[i]) note('square', LEAD[i], next, EIGHTH * 0.9, 0.5);
-      if (i % 2 === 0) {
-        const root = ROOTS[Math.floor(i / 8)];
-        note('triangle', i % 4 === 0 ? root : root + 7, next, EIGHTH * 1.8, 0.9);
+      const i = step % th.notes.length;
+      if (th.notes[i]) note(th.lead, th.notes[i], next, eighth * 0.9, th.leadVol);
+      if (i % th.bassEvery === 0) {
+        const root = th.roots[Math.floor(i / 8)];
+        const fifth = th.bassEvery === 1 ? (i % 2 ? 12 : 0) : (i % (th.bassEvery * 2) ? 7 : 0);
+        note(th.bass, root + fifth, next, eighth * th.bassEvery * 0.9, th.bassVol);
       }
-      next += EIGHTH; step++;
+      next += eighth; step++;
     }
   };
   tick();

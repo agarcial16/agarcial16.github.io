@@ -73,6 +73,17 @@
   </head>
   <body>
     <div id="root"></div>
+    <!-- Filtro del modo Game Boy: reduce imágenes a la paleta de 4 verdes. -->
+    <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+      <filter id="gb-filter" color-interpolation-filters="sRGB">
+        <feColorMatrix type="matrix" values="0.3 0.59 0.11 0 0  0.3 0.59 0.11 0 0  0.3 0.59 0.11 0 0  0 0 0 1 0" />
+        <feComponentTransfer>
+          <feFuncR type="discrete" tableValues="0.059 0.188 0.545 0.608" />
+          <feFuncG type="discrete" tableValues="0.220 0.384 0.675 0.737" />
+          <feFuncB type="discrete" tableValues="0.059 0.188 0.059 0.059" />
+        </feComponentTransfer>
+      </filter>
+    </svg>
     <noscript>
       <h1>Ángel García Lopezlira</h1>
       <p>Ingeniero de software · QA Automation, DevOps e IA aplicada. Valdepeñas (Ciudad Real), España.</p>

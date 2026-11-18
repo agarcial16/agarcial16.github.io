@@ -377,7 +377,6 @@ ul, ol { margin: 0; padding: 0; list-style: none; }
 .town-bar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px 12px; max-width: 100%; }
 .town-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 .town-title { font-family: var(--font-pixel); font-size: 0.8rem; color: var(--gold); text-shadow: var(--shadow); }
-.town-frame { padding: 6px; max-width: 100%; }
 .town-canvas { display: block; image-rendering: pixelated; border-radius: 3px; touch-action: none; }
 .town-prompt {
   position: absolute; left: 50%; bottom: 16px; transform: translateX(-50%);
@@ -398,26 +397,67 @@ ul, ol { margin: 0; padding: 0; list-style: none; }
 .btn-small { font-size: 0.5rem; padding: 7px 9px; }
 .menu-lang { display: none; }
 
-.town-pad { display: none; }
-@media (pointer: coarse), (max-width: 760px) {
-  .town { align-content: start; }
+/* ===== Consola alrededor del pueblo ===== */
+.console {
+  --shell-top: #3d4294; --shell-bot: #262a66; --shell-edge: #10133a; --bezel: #191b2c; --bezel-text: #8f95c9;
+  --key: #1b1d2e; --key-text: #8f95c9; --btn-a: var(--gold); --btn-b: #e2687a;
+  display: grid; grid-template-columns: 130px auto 130px; grid-template-areas: 'dpad screen ab' '. meta .';
+  align-items: center; gap: 14px 20px; padding: 22px 22px 16px; width: max-content; max-width: 100%;
+  border-radius: 26px;
+  background: linear-gradient(180deg, var(--shell-top), var(--shell-bot));
+  box-shadow: inset 0 3px 0 rgba(255, 255, 255, 0.16), inset 0 -6px 0 rgba(0, 0, 0, 0.3), 0 9px 0 var(--shell-edge), 0 18px 34px rgba(0, 0, 0, 0.45);
+  user-select: none; -webkit-user-select: none;
+}
+.console-screen {
+  grid-area: screen; min-width: 0; padding: 10px 16px 16px; border-radius: 12px 12px 34px 12px;
+  background: var(--bezel); box-shadow: inset 0 0 0 3px rgba(0, 0, 0, 0.45);
+}
+.console-label {
+  display: flex; align-items: center; gap: 8px; margin: 0 0 8px;
+  font-family: var(--font-pixel); font-size: 0.45rem; letter-spacing: 0.08em; color: var(--bezel-text); text-shadow: none;
+}
+.console-led { width: 8px; height: 8px; border-radius: 50%; background: #ff4d4d; box-shadow: 0 0 6px #ff4d4d; }
+.town-frame { position: relative; max-width: 100%; border-radius: 4px; overflow: hidden; box-shadow: 0 0 0 3px #05060d; }
+
+.console-dpad { grid-area: dpad; justify-self: center; display: grid; grid-template: repeat(3, 40px) / repeat(3, 40px); touch-action: none; }
+.pad, .pad-center { background: var(--key); border: 0; color: var(--key-text); font-size: 0.8rem; box-shadow: 0 4px 0 rgba(0, 0, 0, 0.45); }
+.pad { cursor: pointer; }
+.pad:active { transform: translateY(3px); box-shadow: none; }
+.pad-up { grid-area: 1 / 2; border-radius: 6px 6px 0 0; }
+.pad-down { grid-area: 3 / 2; border-radius: 0 0 6px 6px; }
+.pad-left { grid-area: 2 / 1; border-radius: 6px 0 0 6px; }
+.pad-right { grid-area: 2 / 3; border-radius: 0 6px 6px 0; }
+.pad-center { grid-area: 2 / 2; }
+
+.console-ab { grid-area: ab; justify-self: center; display: flex; gap: 12px; transform: rotate(-22deg); }
+.pad-round {
+  width: 54px; height: 54px; border-radius: 50%; border: 0; cursor: pointer;
+  font-family: var(--font-pixel); font-size: 0.75rem; color: rgba(0, 0, 0, 0.55);
+  box-shadow: inset 0 -4px 0 rgba(0, 0, 0, 0.25), 0 4px 0 rgba(0, 0, 0, 0.45);
+}
+.pad-round:active { transform: translateY(3px); box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.25); }
+.pad-a { background: var(--btn-a); margin-top: -18px; }
+.pad-b { background: var(--btn-b); margin-top: 18px; }
+
+.console-meta { grid-area: meta; display: flex; justify-content: center; gap: 26px; }
+.pad-pill {
+  display: grid; justify-items: center; gap: 6px; background: none; border: 0; cursor: pointer; padding: 0;
+  font-family: var(--font-pixel); font-size: 0.42rem; letter-spacing: 0.08em; color: var(--bezel-text);
+}
+.pad-pill span { width: 44px; height: 11px; border-radius: 6px; background: var(--key); transform: rotate(-22deg); box-shadow: 0 3px 0 rgba(0, 0, 0, 0.45); }
+.pad-pill:active span { transform: rotate(-22deg) translateY(2px); box-shadow: none; }
+
+/* Vertical, tipo Game Boy, en móvil y pantallas estrechas */
+@media (pointer: coarse), (max-width: 999px) {
+  .town { align-content: start; padding: 12px 8px 24px; }
   .town-help { display: none; }
-  .town-pad {
-    display: grid; grid-template: repeat(3, 52px) / repeat(3, 52px) 1fr 72px; gap: 4px;
-    width: min(100%, 380px); user-select: none; -webkit-user-select: none; touch-action: none;
+  .console {
+    grid-template-columns: 1fr 1fr; grid-template-areas: 'screen screen' 'dpad ab' 'meta meta';
+    padding: 10px 10px 18px; gap: 14px 8px; border-radius: 16px 16px 44px 16px;
   }
-  .pad {
-    font: inherit; font-size: 1.1rem; color: var(--text);
-    background: linear-gradient(180deg, var(--win-top), var(--win-bot));
-    border: 2px solid var(--win-border); border-radius: 8px; box-shadow: 0 3px 0 var(--win-edge);
-  }
-  .pad:active { transform: translateY(2px); box-shadow: none; }
-  .pad-up { grid-area: 1 / 2; } .pad-left { grid-area: 2 / 1; } .pad-right { grid-area: 2 / 3; } .pad-down { grid-area: 3 / 2; }
-  .pad-a {
-    grid-area: 2 / 5; width: 72px; height: 72px; align-self: center; border-radius: 50%;
-    font-family: var(--font-pixel); font-size: 0.9rem; color: #1a1500; text-shadow: none;
-    background: var(--gold); border-color: #fff4c4;
-  }
+  .console-screen { padding: 8px 8px 14px; border-radius: 8px 8px 26px 8px; }
+  .console-dpad { grid-template: repeat(3, 46px) / repeat(3, 46px); }
+  .pad-round { width: 60px; height: 60px; }
 }
 
 .town-sheet {
@@ -459,3 +499,33 @@ ul, ol { margin: 0; padding: 0; list-style: none; }
 .ending-stars { font-family: var(--font-pixel); color: var(--gold); font-size: 0.8rem; letter-spacing: 0.3em; margin-bottom: 10px; }
 .ending-title { font-family: var(--font-pixel); font-size: 1rem; line-height: 1.6; color: var(--gold); margin-bottom: 14px; }
 .ending-links { justify-content: center; }
+
+/* ===== Modo Game Boy (código Konami) ===== */
+html.gameboy {
+  --night: #8bac0f; --win-top: #9bbc0f; --win-mid: #9bbc0f; --win-bot: #8bac0f;
+  --win-border: #0f380f; --win-edge: #306230; --text: #0f380f; --muted: #306230;
+  --gold: #0f380f; --green: #306230; --red: #0f380f; --chip: rgba(15, 56, 15, 0.12); --shadow: none;
+}
+html.gameboy .stars { display: none; }
+html.gameboy img { filter: url(#gb-filter); }
+html.gameboy a:hover, html.gameboy .btn:hover { color: #0f380f; background: rgba(15, 56, 15, 0.12); }
+html.gameboy .btn-primary, html.gameboy .town-key { background: #0f380f; color: #9bbc0f; border-color: #0f380f; }
+html.gameboy .btn-primary:hover { background: #306230; color: #9bbc0f; }
+html.gameboy .bar-fill { background: #306230; }
+html.gameboy .emblem, html.gameboy .status-avatar { background: #9bbc0f; }
+html.gameboy .town-prompt, html.gameboy .town-toast, html.gameboy .gb-toast { background: #9bbc0f; border-color: #0f380f; }
+html.gameboy .town-sheet { background: rgba(139, 172, 15, 0.97); }
+html.gameboy .town-modal { background: rgba(48, 98, 48, 0.75); }
+html.gameboy .console {
+  --shell-top: #d3d0c6; --shell-bot: #bdbab0; --shell-edge: #8f8c84; --bezel: #5d5f72; --bezel-text: #c6c7d6;
+  --key: #2b2b33; --key-text: #8a8a96; --btn-a: #9b1b4f; --btn-b: #9b1b4f;
+}
+html.gameboy .pad-round { color: rgba(255, 255, 255, 0.55); }
+html.gameboy .console-led { background: #d22; box-shadow: 0 0 6px #d22; }
+
+.gb-toast {
+  position: fixed; left: 50%; top: 14px; z-index: 40; transform: translateX(-50%); margin: 0;
+  font-family: var(--font-pixel); font-size: 0.6rem; color: var(--text); text-shadow: none;
+  background: var(--win-mid); border: 3px solid var(--win-border); border-radius: 6px; padding: 10px 14px;
+  animation: toast-in 240ms ease-out;
+}

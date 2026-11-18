@@ -5,10 +5,11 @@ import {
   drawAmbient, drawButterflies, drawFireflies, drawPuffs, drawSparkles, drawBubble, drawOpenDoor, drawGlint,
   dayPhase, drawDaylight, drawWindowLights,
 } from './effects.js';
-import { play, jingle, setSound, setMusic, loadPreference, loadMusicPreference, resumeOnGesture, stopAll } from './sound.js';
+import { play, jingle, setTheme, setSound, setMusic, loadPreference, loadMusicPreference, resumeOnGesture, stopAll } from './sound.js';
 import { OBJECTIVES, loadJournal, saveJournal, isComplete, loadWorld, saveWorld } from './journal.js';
 import { useI18n, LangToggle } from '../i18n/index.jsx';
 import { track } from '../lib/analytics.js';
+import { feedKonami, isGameBoy, quantize } from '../lib/gameboy.js';
 
 const STEP_MS = 150;
 const BRIDGE_MS = 450;
@@ -22,6 +23,7 @@ const LIGHTS = BUILDINGS.flatMap(windowRects);
 
 // El indicador muestra la tecla que se usa: Enter con teclado, A con la cruceta táctil.
 const touchFirst = () => window.matchMedia?.('(pointer: coarse)').matches;
+const isWideConsole = () => window.innerWidth >= 1000 && !window.matchMedia('(pointer: coarse)').matches;
 const reduceMotion = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 
 const ENTER_MS = { open: 140, fade: 260, done: 520 };
@@ -32,10 +34,10 @@ function useViewport(ref) {
   const [vp, setVp] = useState({ scale: 2, w: W * TILE, h: H * TILE });
   useEffect(() => {
     const fit = () => {
-      // Descuenta el relleno de la página y el marco de la ventana.
-      const avail = (ref.current?.clientWidth ?? window.innerWidth) - 56;
-      const touch = window.matchMedia('(pointer: coarse), (max-width: 760px)').matches;
-      const availH = window.innerHeight - (touch ? 340 : 200);
+      // Descuenta la carcasa de la consola: horizontal en escritorio, vertical en móvil.
+      const wide = isWideConsole();
+      const avail = (ref.current?.clientWidth ?? window.innerWidth) - (wide ? 32 + 376 : 16 + 20 + 16);
+      const availH = window.innerHeight - (wide ? 225 : 390);
       const scale = Math.max(2, Math.min(4, Math.floor(avail / (W * TILE)), Math.floor(availH / (H * TILE))));
       setVp({
         scale,
@@ -94,7 +96,10 @@ export default function Town({ places, onMenu }) {
     window.addEventListener('keydown', key);
     window.addEventListener('pointerdown', pointer);
     // La luz cambia con la hora del visitante; se revisa cada minuto.
-    const clock = setInterval(() => { phaseRef.current = dayPhase(); }, 60_000);
+    // La música también: de noche suena la nana.
+    const syncTheme = () => setTheme(phaseRef.current === 'night' ? 'night' : 'day');
+    syncTheme();
+    const clock = setInterval(() => { phaseRef.current = dayPhase(); syncTheme(); }, 60_000);
     return () => { window.removeEventListener('keydown', key); window.removeEventListener('pointerdown', pointer); clearInterval(clock); };
   }, []);
 
@@ -360,6 +365,7 @@ export default function Town({ places, onMenu }) {
       drawSparkles(g, s.chestT0, now, camX, camY);
 
       if (fade > 0) { g.fillStyle = `rgba(5, 8, 38, ${fade.toFixed(3)})`; g.fillRect(0, 0, canvas.width, canvas.height); }
+      if (isGameBoy()) quantize(g, canvas.width, canvas.height);
 
       // Indicación contextual (solo cambia el estado de React cuando cambia el texto).
       let p = null;
@@ -412,12 +418,20 @@ export default function Town({ places, onMenu }) {
     };
   }, [interact, onMenu]);
 
-  // Cruceta táctil
+  // Botones de la consola: cruceta, A (acción), B (atrás), SELECT (diario) y START (menú).
   const press = (dir) => (e) => {
     e.preventDefault();
     e.currentTarget.setPointerCapture?.(e.pointerId);
+    feedKonami(dir);
     game.current.held = [dir];
     game.current.tap = dir;
+  };
+  const pressA = () => { feedKonami('a'); if (dialog) return; interact(); };
+  const pressB = () => {
+    feedKonami('b');
+    if (dialog) setDialog(null);
+    else if (showJournal) setShowJournal(false);
+    else if (ending) setEnding(false);
   };
   const release = () => { game.current.held = []; };
 
@@ -443,36 +457,49 @@ export default function Town({ places, onMenu }) {
         </div>
       </header>
 
-      <div className="win town-frame">
-        <canvas
-          ref={canvasRef}
-          className="town-canvas"
-          width={vp.w}
-          height={vp.h}
-          style={{ width: vp.w * vp.scale, height: vp.h * vp.scale }}
-          role="img"
-          aria-label={T.canvas}
-        />
-        {toast && (
-          <p className="town-toast" role="status">
-            <span className="hl">{T.journal.done}</span> {objectiveLabel(toast)}
-          </p>
-        )}
-        {prompt && !dialog && !place && !showJournal && !ending && (
-          <button type="button" className="town-prompt" onClick={interact}>
-            <span className="town-key">{touch ? 'A' : 'Enter'}</span> {prompt}
-          </button>
-        )}
-        {dialog && <TownDialog {...dialog} T={T} onClose={closeDialog} />}
-      </div>
+      <div className="console">
+        <div className="console-screen">
+          <p className="console-label" aria-hidden="true"><span className="console-led" /> {T.name}</p>
+          <div className="town-frame">
+            <canvas
+              ref={canvasRef}
+              className="town-canvas"
+              width={vp.w}
+              height={vp.h}
+              style={{ width: vp.w * vp.scale, height: vp.h * vp.scale }}
+              role="img"
+              aria-label={T.canvas}
+            />
+            {toast && (
+              <p className="town-toast" role="status">
+                <span className="hl">{T.journal.done}</span> {objectiveLabel(toast)}
+              </p>
+            )}
+            {prompt && !dialog && !place && !showJournal && !ending && (
+              <button type="button" className="town-prompt" onClick={interact}>
+                <span className="town-key">{touch ? 'A' : 'Enter'}</span> {prompt}
+              </button>
+            )}
+            {dialog && <TownDialog {...dialog} T={T} onClose={closeDialog} />}
+          </div>
+        </div>
 
-      <div className="town-pad" aria-hidden="true">
-        {['up', 'left', 'right', 'down'].map((d) => (
-          <button key={d} type="button" tabIndex={-1} className={`pad pad-${d}`} onPointerDown={press(d)} onPointerUp={release} onPointerCancel={release} onContextMenu={(e) => e.preventDefault()}>
-            {{ up: '▲', down: '▼', left: '◀', right: '▶' }[d]}
-          </button>
-        ))}
-        <button type="button" tabIndex={-1} className="pad pad-a" onClick={interact}>A</button>
+        <div className="console-dpad" aria-hidden="true">
+          {['up', 'left', 'right', 'down'].map((d) => (
+            <button key={d} type="button" tabIndex={-1} className={`pad pad-${d}`} onPointerDown={press(d)} onPointerUp={release} onPointerCancel={release} onContextMenu={(e) => e.preventDefault()}>
+              {{ up: '▲', down: '▼', left: '◀', right: '▶' }[d]}
+            </button>
+          ))}
+          <span className="pad-center" />
+        </div>
+        <div className="console-ab" aria-hidden="true">
+          <button type="button" tabIndex={-1} className="pad-round pad-b" onClick={pressB}>B</button>
+          <button type="button" tabIndex={-1} className="pad-round pad-a" onClick={pressA}>A</button>
+        </div>
+        <div className="console-meta" aria-hidden="true">
+          <button type="button" tabIndex={-1} className="pad-pill" onClick={() => setShowJournal(true)}><span />SELECT</button>
+          <button type="button" tabIndex={-1} className="pad-pill" onClick={onMenu}><span />START</button>
+        </div>
       </div>
 
       <p className="town-help muted small">{T.help} <a href="https://kenney.nl" target="_blank" rel="noreferrer">Kenney</a> (CC0)</p>
