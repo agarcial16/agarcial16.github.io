@@ -19,7 +19,8 @@ const WALLS = {
 // Devuelve dónde están el anfitrión y el visitante. drawSprites se llama entre el
 // decorado de fondo y el mobiliario en primer plano: así la barra tapa las piernas
 // del anfitrión, que queda detrás como un camarero tras su mostrador.
-export function drawInterior(g, id, W, H, time, drawSprites) {
+// opts.catGone indica que el gato de la cama ya viaja con el visitante.
+export function drawInterior(g, id, W, H, time, drawSprites, opts = {}) {
   const cols = Math.min(11, Math.floor(W / 16)), rows = Math.min(8, Math.floor(H / 16));
   const rw = cols * 16, rh = rows * 16;
   const ox = Math.floor((W - rw) / 2), oy = Math.floor((H - rh) / 2);
@@ -44,7 +45,7 @@ export function drawInterior(g, id, W, H, time, drawSprites) {
   const flicker = Math.floor(time / 120) % 3;
   const room = { ox, oy, rw, rh, cx };
   const pos = { host: { x: cx - 8, y: oy + 52 }, visitor: { x: cx - 8, y: oy + rh - 20 } };
-  DECOR[id](g, room, flicker, time);
+  DECOR[id](g, room, flicker, time, opts);
   drawSprites?.(pos);
   FOREGROUND[id]?.(g, room, flicker);
   return pos;
@@ -60,13 +61,17 @@ const counter = (g, x, y, w, top = '#8a5a2b', front = '#6b4226') => {
 };
 
 const DECOR = {
-  casa(g, { ox, oy, rw, cx }) {
+  casa(g, { ox, oy, rw, cx }, _flicker, _time, { catGone } = {}) {
     window_(g, ox + 10, oy + 12); window_(g, ox + rw - 28, oy + 12);
-    // Cama con gato dormido.
+    // Cama: si el gato viaja contigo, la manta queda deshecha y vacía.
     px(g, '#5a3a22', ox + 8, oy + 52, 26, 30); px(g, '#ffffff', ox + 10, oy + 54, 22, 8);
     px(g, '#c0413b', ox + 10, oy + 62, 22, 18); px(g, '#e04848', ox + 10, oy + 62, 22, 2);
-    px(g, '#3b3350', ox + 14, oy + 66, 10, 5); px(g, '#3b3350', ox + 22, oy + 64, 4, 4);
-    px(g, '#3b3350', ox + 22, oy + 63, 1, 1); px(g, '#3b3350', ox + 25, oy + 63, 1, 1); px(g, '#3b3350', ox + 11, oy + 69, 5, 2);
+    if (!catGone) {
+      px(g, '#3b3350', ox + 14, oy + 66, 10, 5); px(g, '#3b3350', ox + 22, oy + 64, 4, 4);
+      px(g, '#3b3350', ox + 22, oy + 63, 1, 1); px(g, '#3b3350', ox + 25, oy + 63, 1, 1); px(g, '#3b3350', ox + 11, oy + 69, 5, 2);
+    } else {
+      px(g, '#a83232', ox + 13, oy + 66, 12, 3); px(g, '#a83232', ox + 21, oy + 69, 9, 3);
+    }
     // Mesa con la ficha de personaje y una taza.
     px(g, '#2a1a10', cx - 15, oy + 55, 30, 12); px(g, '#8a5a2b', cx - 14, oy + 56, 28, 4); px(g, '#6b4226', cx - 14, oy + 60, 28, 6);
     px(g, '#f4e6c3', cx - 8, oy + 53, 10, 6); px(g, '#6b4226', cx - 6, oy + 55, 6, 1); px(g, '#6b4226', cx - 6, oy + 57, 4, 1);

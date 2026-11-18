@@ -53,6 +53,7 @@ export async function setSound(on) {
   await loadAll();
   musicOn = loadMusicPreference();
   if (musicOn) startMusic();
+  if (rainOn) setRain(true);
 }
 
 // Si el visitante ya tenía el sonido activado, arranca en su primera interacción.
@@ -73,6 +74,7 @@ const SYNTH = {
   crit: { type: 'sawtooth', from: 900, to: 90, dur: 0.22, vol: 0.18 },
   skill: { type: 'square', from: 500, to: 1400, dur: 0.16, vol: 0.12 },
   heal: { type: 'triangle', from: 500, to: 1200, dur: 0.3, vol: 0.35 },
+  meow: { type: 'sawtooth', from: 460, to: 880, dur: 0.24, vol: 0.12 },
 };
 
 export function play(name) {
@@ -101,7 +103,32 @@ export function play(name) {
   src.start();
 }
 
-export function stopAll() { stopMusic(); enabled = false; }
+export function stopAll() { stopMusic(); stopRain(); enabled = false; }
+
+// ---- Lluvia: ruido blanco en bucle, filtrado para que suene a chapoteo suave ----
+let rainSrc = null, rainOn = false;
+
+export function setRain(on) {
+  rainOn = on;
+  if (on && enabled && ctx && !rainSrc) {
+    const len = 2 * ctx.sampleRate;
+    const buf = ctx.createBuffer(1, len, ctx.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * 0.4;
+    const src = ctx.createBufferSource();
+    src.buffer = buf; src.loop = true;
+    const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 700;
+    const hp = ctx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 350;
+    const gain = ctx.createGain(); gain.gain.value = 0.05;
+    src.connect(lp).connect(hp).connect(gain).connect(sfx);
+    src.start();
+    rainSrc = src;
+  } else if (!on || !enabled) stopRain();
+}
+
+function stopRain() {
+  if (rainSrc) { try { rainSrc.stop(); } catch { /* ya parado */ } rainSrc = null; }
+}
 
 // ---- Música: tres bucles propios de 8 compases en corcheas (0 = silencio) ----
 const THEMES = {

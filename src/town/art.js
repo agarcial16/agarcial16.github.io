@@ -279,3 +279,49 @@ export function drawCave(g, ox, oy) {
   }
   px(g, '#ffd866', ox + 5, oy + 10); px(g, '#ffd866', ox + 10, oy + 10); // ojos en la oscuridad
 }
+
+// Gato compañero (el de la cama de Mi casa): gris, orejas puntiagudas y verde en los ojos.
+// dir = 'down' | 'up' | 'left' | 'right'; step 0 quieto, 1 y 2 pasos; time anima cola y parpadeo.
+const CAT = { fur: '#4a4a5e', light: '#6b6b80', eye: '#8de89a', dark: '#1a1230' };
+export function drawCat(g, ox, oy, dir, step, time) {
+  const bob = step ? -1 : 0;
+  const y = oy + 3 + bob;
+  const tail = Math.round(Math.sin(time / 380) * (step ? 2 : 1));
+  const blink = !step && Math.floor(time / 2600) % 9 === 0;
+  const { fur, light, eye, dark } = CAT;
+  if (dir === 'down') {
+    px(g, fur, ox + 4, y, 2, 2); px(g, fur, ox + 10, y, 2, 2);          // orejas
+    px(g, dark, ox + 5, y + 1, 1, 1); px(g, dark, ox + 10, y + 1, 1, 1);
+    px(g, fur, ox + 4, y + 2, 8, 5);                                    // cabeza
+    if (!blink) { px(g, eye, ox + 6, y + 4, 1, 2); px(g, eye, ox + 9, y + 4, 1, 2); }
+    px(g, dark, ox + 7, y + 6, 2, 1);                                   // nariz
+    px(g, fur, ox + 5, y + 7, 7, 5);                                    // cuerpo
+    px(g, light, ox + 7, y + 8, 3, 4);                                  // pecho
+    px(g, fur, ox + 5, y + 11 + (step === 1 ? -1 : 0), 2, 2);           // patas
+    px(g, fur, ox + 10, y + 11 + (step === 2 ? -1 : 0), 2, 2);
+    px(g, fur, ox + 12, y + 7 + tail, 1, 3);                            // cola
+    px(g, light, ox + 12, y + 6 + tail, 1, 1);
+  } else if (dir === 'up') {
+    px(g, fur, ox + 4, y, 2, 2); px(g, fur, ox + 10, y, 2, 2);
+    px(g, fur, ox + 4, y + 2, 8, 5);
+    px(g, fur, ox + 5, y + 7, 7, 5);
+    px(g, fur, ox + 5, y + 11 + (step === 1 ? -1 : 0), 2, 2);
+    px(g, fur, ox + 10, y + 11 + (step === 2 ? -1 : 0), 2, 2);
+    px(g, fur, ox + 12, y + 5 + tail, 1, 3);                            // cola levantada
+    px(g, light, ox + 12, y + 4 + tail, 1, 1);
+  } else {
+    // Vista lateral: la cabeza cae al lado al que mira el gato.
+    const fx = dir === 'left' ? -1 : 1;
+    const head = dir === 'left' ? ox + 2 : ox + 8;
+    const tailX = dir === 'left' ? ox + 13 : ox + 2;
+    px(g, fur, head, y + 1, 2, 2); px(g, fur, head + 4, y + 1, 2, 2);   // orejas
+    px(g, fur, head, y + 3, 6, 5);                                      // cabeza
+    if (!blink) px(g, eye, dir === 'left' ? head + 1 : head + 4, y + 5, 1, 1);
+    px(g, dark, dir === 'left' ? head + 1 : head + 4, y + 7, 1, 1);     // hocico
+    px(g, fur, ox + 5, y + 6, 7, 5);                                    // cuerpo
+    px(g, fur, step === 1 ? ox + 5 : ox + 6, y + 10 + (step === 1 ? -1 : 0), 2, 3);
+    px(g, fur, step === 2 ? ox + 10 : ox + 9, y + 10 + (step === 2 ? -1 : 0), 2, 3);
+    px(g, fur, tailX, y + 3 + tail, 1, 3);                              // cola
+    px(g, light, tailX, y + 2 + tail, 1, 1);
+  }
+}

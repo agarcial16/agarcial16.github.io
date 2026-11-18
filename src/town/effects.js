@@ -110,6 +110,24 @@ export function drawFireflies(g, time, camX, camY) {
   }
 }
 
+// Lluvia de madrugada (6–8 h). Con ?lluvia=1 o ?lluvia=0 se fuerza o se quita para probar.
+export function isRaining(date = new Date()) {
+  const forced = new URLSearchParams(window.location.search).get('lluvia');
+  if (forced === '1' || forced === '0') return forced === '1';
+  return dayPhase(date) === 'dawn';
+}
+
+// Gotas obliccas cayendo por toda la pantalla; deterministas para que no parpadeen.
+export function drawRain(g, time, w, h) {
+  for (let i = 0; i < 46; i++) {
+    const sp = 0.16 + (i % 6) * 0.03;
+    const y = (i * 43 + time * sp) % (h + 8) - 4;
+    const x = ((i * 71 + Math.floor(time / 120) * 3) % (w + 24)) - 12;
+    rect(g, 'rgba(148, 178, 235, 0.6)', x, y, 1, 5);
+    rect(g, 'rgba(198, 220, 255, 0.4)', x, y + 5, 1, 2);
+  }
+}
+
 // Momento del día según la hora local del visitante (?hora=22 en la URL para probarlo).
 export function dayPhase(date = new Date()) {
   const forced = Number(new URLSearchParams(window.location.search).get('hora'));

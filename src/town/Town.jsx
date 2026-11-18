@@ -1,11 +1,11 @@
 import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { TILE, W, H, BUILDINGS, START, NPC, CHEST, LEVER, BRIDGE, BUSHES, world, cellAt, ground } from './map.js';
-import { drawMap, drawChest, drawBridge, drawLever, drawBush, buildSprites, windowRects, ANGEL, ANGEL_SHAPE, VISITOR } from './art.js';
+import { drawMap, drawChest, drawBridge, drawLever, drawBush, buildSprites, windowRects, ANGEL, ANGEL_SHAPE, VISITOR, drawCat } from './art.js';
 import {
   drawAmbient, drawButterflies, drawFireflies, drawPuffs, drawSparkles, drawBubble, drawOpenDoor, drawGlint,
-  dayPhase, drawDaylight, drawWindowLights,
+  dayPhase, drawDaylight, drawWindowLights, isRaining, drawRain,
 } from './effects.js';
-import { play, jingle, setTheme, setSound, setMusic, loadPreference, loadMusicPreference, resumeOnGesture, stopAll } from './sound.js';
+import { play, jingle, setTheme, setSound, setMusic, loadPreference, loadMusicPreference, resumeOnGesture, stopAll, setRain } from './sound.js';
 import { OBJECTIVES, loadJournal, saveJournal, isComplete, loadWorld, saveWorld } from './journal.js';
 import { useI18n, LangToggle } from '../i18n/index.jsx';
 import { ENEMIES } from './battle/data.js';
@@ -101,6 +101,7 @@ export default function Town({ places, onMenu }) {
   const journalRef = useRef(journal);
   journalRef.current = journal;
   const phaseRef = useRef(dayPhase());
+  const rainingRef = useRef(isRaining());
 
   useEffect(() => {
     const key = () => setTouch(false);
@@ -108,10 +109,16 @@ export default function Town({ places, onMenu }) {
     window.addEventListener('keydown', key);
     window.addEventListener('pointerdown', pointer);
     // La luz cambia con la hora del visitante; se revisa cada minuto.
-    // La música también: de noche suena la nana.
+    // La música también: de noche suena la nana. Y la lluvia de madrugada.
     const syncTheme = () => { if (!document.querySelector('.battle')) setTheme(phaseRef.current === 'night' ? 'night' : 'day'); };
     syncTheme();
-    const clock = setInterval(() => { phaseRef.current = dayPhase(); syncTheme(); }, 60_000);
+    setRain(rainingRef.current);
+    const clock = setInterval(() => {
+      phaseRef.current = dayPhase();
+      syncTheme();
+      const raining = isRaining();
+      if (raining !== rainingRef.current) { rainingRef.current = raining; setRain(raining); }
+    }, 60_000);
     return () => { window.removeEventListener('keydown', key); window.removeEventListener('pointerdown', pointer); clearInterval(clock); };
   }, []);
 
@@ -121,6 +128,10 @@ export default function Town({ places, onMenu }) {
     world.bridge = saved.bridge; world.leverFound = saved.bridge; world.searched = new Set();
     game.current.leverT0 = saved.bridge ? 1 : 0;
     game.current.chestOpen = journalRef.current.done.includes('cv');
+    // El gato de Mi casa acompaña al visitante si ya lo adoptó.
+    game.current.cat = journalRef.current.done.includes('gato')
+      ? { x: START.x - 1, y: START.y, dir: 'down', from: null, t: 0 }
+      : null;
     const off = resumeOnGesture();
     return () => { off(); stopAll(); };
   }, []);
@@ -150,6 +161,12 @@ export default function Town({ places, onMenu }) {
     if (!added.length) return;
     jingle('quest');
     setToast(added[added.length - 1]);
+    // Si el visitante acaba de adoptar al gato, este aparece a su lado.
+    if (added.includes('gato') && !game.current.cat) {
+      const s = game.current;
+      const spot = [[0, 1], [1, 0], [-1, 0], [0, -1]].find(([dx, dy]) => !cellAt(s.x + dx, s.y + dy));
+      if (spot) game.current.cat = { x: s.x + spot[0], y: s.y + spot[1], dir: 'down', from: null, t: 0 };
+    }
     if (isComplete(journal) && !journal.ended) pendingEnding.current = true;
   }, [journal]);
 
@@ -169,14 +186,17 @@ export default function Town({ places, onMenu }) {
     setEnding(true);
     jingle('fanfare');
     track('partida-completada');
+    // La medalla cuenta los extras: el gato adoptado y la cueva limpia.
+    if (journalRef.current.done.includes('gato') && defeatedRef.current.length === ENEMIES.length) track('medalla-exploracion');
   }, [dialog, place, journal]);
 
   const resetJournal = () => {
     const fresh = { done: [], ended: false };
-    // Empezar de nuevo también esconde la palanca, retira el puente y cierra el cofre.
+    // Empezar de nuevo también esconde la palanca, retira el puente, cierra el cofre
+    // y devuelve el gato a su cama.
     saveWorld({ bridge: false });
     world.bridge = false; world.leverFound = false;
-    Object.assign(game.current, { leverT0: 0, chestOpen: false, chestT0: 0, rustle: null });
+    Object.assign(game.current, { leverT0: 0, chestOpen: false, chestT0: 0, rustle: null, cat: null });
     // Si estaba en el puente o en la isla, vuelve a la plaza para no quedarse en el agua.
     const s = game.current;
     if (['water', 'island'].includes(ground[s.y]?.[s.x])) Object.assign(s, { x: START.x, y: START.y, dir: START.dir, from: null });
@@ -185,7 +205,7 @@ export default function Town({ places, onMenu }) {
     setJournal(fresh);
   };
 
-  const objectiveLabel = (id) => (id === 'cv' ? T.journal.cv : id === 'cave' ? T.battle.extra : T.journal.visit(T.buildings[id].name));
+  const objectiveLabel = (id) => (id === 'cv' ? T.journal.cv : id === 'cave' ? T.battle.extra : id === 'gato' ? T.journal.cat : T.journal.visit(T.buildings[id].name));
 
   const game = useRef({
     x: START.x, y: START.y, dir: START.dir, from: null, t: 0, step: 0,
@@ -216,6 +236,12 @@ export default function Town({ places, onMenu }) {
     const s = game.current;
     const b = s.anim?.b;
     if (b) { s.x = b.door.x; s.y = b.door.y + 1; s.dir = 'down'; s.from = null; }
+    // El gato espera junto a la puerta: se le coloca en la primera casilla pisable vecina.
+    if (s.cat && b) {
+      Object.assign(s.cat, { from: null, t: 0, dir: 'down' });
+      const spot = [[0, 1], [1, 0], [-1, 0], [0, -1]].find(([dx, dy]) => !cellAt(s.x + dx, s.y + dy));
+      if (spot) { s.cat.x = s.x + spot[0]; s.cat.y = s.y + spot[1]; }
+    }
     s.anim = reduceMotion() ? null : { kind: 'fadein', b, t0: performance.now() };
     if (b) play('door-close');
     setPlace(null);
@@ -321,10 +347,21 @@ export default function Town({ places, onMenu }) {
       if (s.from) {
         s.t += dt / STEP_MS;
         if (s.t >= 1) {
+          // El gato pisará la casilla que deja libre el visitante.
+          if (s.cat) {
+            const c = s.cat;
+            const dx = s.from.x - c.x, dy = s.from.y - c.y;
+            c.dir = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up');
+            c.from = { x: c.x, y: c.y }; c.x = s.from.x; c.y = s.from.y; c.t = 0;
+          }
           s.from = null; s.t = 0; s.step++;
           play('step');
           if (!still && ground[s.y]?.[s.x] === 'path') s.puffs.push({ x: s.x * TILE, y: s.y * TILE, t0: now });
         }
+      }
+      if (s.cat?.from) {
+        s.cat.t += dt / STEP_MS;
+        if (s.cat.t >= 1) { s.cat.from = null; s.cat.t = 0; }
       }
       const want = s.held[s.held.length - 1] ?? s.tap;
       if (!s.from && !s.paused && s.anim?.kind !== 'enter' && want) {
@@ -393,13 +430,32 @@ export default function Town({ places, onMenu }) {
           },
         },
       ];
+      if (s.cat) {
+        const catX = s.cat.from ? s.cat.from.x + (s.cat.x - s.cat.from.x) * s.cat.t : s.cat.x;
+        const catY = s.cat.from ? s.cat.from.y + (s.cat.y - s.cat.from.y) * s.cat.t : s.cat.y;
+        const bx = Math.round(catX * TILE) - camX, by = Math.round(catY * TILE) - camY;
+        actors.push({
+          y: catY,
+          draw: () => {
+            shadow(bx, by);
+            drawCat(g, bx, by, s.cat.dir, s.cat.from ? 1 + (s.step % 2) : 0, time);
+          },
+        });
+      }
       actors.sort((a, b) => a.y - b.y).forEach((a) => a.draw());
-      if (!still && phase !== 'night') drawButterflies(g, time, camX, camY);
+      const raining = rainingRef.current;
+      if (!still && phase !== 'night' && !raining) drawButterflies(g, time, camX, camY);
 
       // Luz del día: tinte según la hora, ventanas encendidas al anochecer y luciérnagas de noche.
       drawDaylight(g, phase, canvas.width, canvas.height);
       if (phase === 'night' || phase === 'dusk') drawWindowLights(g, LIGHTS, camX, camY, time);
       if (phase === 'night' && !still) drawFireflies(g, time, camX, camY);
+      // Lluvia de madrugada: cielo más gris y gotas por toda la pantalla.
+      if (raining) {
+        g.fillStyle = 'rgba(24, 34, 66, 0.16)';
+        g.fillRect(0, 0, canvas.width, canvas.height);
+        if (!still) drawRain(g, time, canvas.width, canvas.height);
+      }
       drawSparkles(g, s.chestT0, now, camX, camY);
 
       if (fade > 0) { g.fillStyle = `rgba(5, 8, 38, ${fade.toFixed(3)})`; g.fillRect(0, 0, canvas.width, canvas.height); }
@@ -481,7 +537,8 @@ export default function Town({ places, onMenu }) {
   const release = () => { game.current.held = []; };
 
   const Panel = place && places[place.panel]?.Panel;
-  const doneCount = journal.done.length;
+  // El gato es un extra: no cuenta para el total de objetivos del diario.
+  const doneCount = journal.done.filter((id) => OBJECTIVES.includes(id)).length;
   const closeDialog = useCallback(() => setDialog(null), []);
   const closeJournal = useCallback(() => setShowJournal(false), []);
   const closeEnding = useCallback(() => setEnding(false), []);
@@ -530,6 +587,8 @@ export default function Town({ places, onMenu }) {
               <Suspense fallback={null}>
                 <Interior
                   building={interior} T={T} width={vp.w} height={vp.h} scale={vp.scale}
+                  catGone={journal.done.includes('gato')}
+                  onPetCat={() => { complete('gato'); track('gato-adoptado'); }}
                   onView={() => { setInterior(null); setPlace(interior); }}
                   onExit={() => { setInterior(null); leave(); }}
                 />
@@ -571,9 +630,17 @@ export default function Town({ places, onMenu }) {
 
       {Panel && <PlaceSheet title={name(place)} hint={T.buildings[place.id].hint} exit={T.exit} Panel={Panel} onClose={leave} />}
       {showJournal && (
-        <Journal T={T} journal={journal} label={objectiveLabel} cave={defeated.length} onReset={resetJournal} onClose={closeJournal} />
+        <Journal
+          T={T} journal={journal} label={objectiveLabel} cave={defeated.length}
+          cat={journal.done.includes('gato')} onReset={resetJournal} onClose={closeJournal}
+        />
       )}
-      {ending && <Ending T={T} t={t} profile={profile} onClose={closeEnding} />}
+      {ending && (
+        <Ending
+          T={T} t={t} profile={profile} onClose={closeEnding}
+          medal={journal.done.includes('gato') && defeated.length === ENEMIES.length}
+        />
+      )}
     </div>
   );
 }
@@ -644,7 +711,7 @@ function PlaceSheet({ title, hint, exit, Panel, onClose }) {
   );
 }
 
-function Journal({ T, journal, label, cave, onReset, onClose }) {
+function Journal({ T, journal, label, cave, cat, onReset, onClose }) {
   const closeRef = useRef(null);
   useModalKeys(onClose, closeRef);
   const J = T.journal;
@@ -652,7 +719,7 @@ function Journal({ T, journal, label, cave, onReset, onClose }) {
     <div className="town-modal" role="dialog" aria-modal="true" aria-labelledby="journal-title">
       <div className="win town-modal-box">
         <h2 id="journal-title" className="win-title">
-          {J.title} · {journal.done.length}/{OBJECTIVES.length}
+          {J.title} · {journal.done.filter((id) => OBJECTIVES.includes(id)).length}/{OBJECTIVES.length}
           {isComplete(journal) && <span className="badge is-done journal-badge">✔ {J.complete}</span>}
         </h2>
         <ul className="journal">
@@ -666,6 +733,10 @@ function Journal({ T, journal, label, cave, onReset, onClose }) {
               </li>
             );
           })}
+          <li className={`journal-extra ${cat ? 'is-done' : ''}`}>
+            <span className="journal-mark" aria-hidden="true">🐾</span>
+            <span>{J.catExtra}</span>
+          </li>
           <li className={`journal-extra ${cave === ENEMIES.length ? 'is-done' : ''}`}>
             <span className="journal-mark" aria-hidden="true">★</span>
             <span>{T.battle.extra} ({cave}/{ENEMIES.length})</span>
@@ -680,7 +751,7 @@ function Journal({ T, journal, label, cave, onReset, onClose }) {
   );
 }
 
-function Ending({ T, t, profile, onClose }) {
+function Ending({ T, t, profile, medal, onClose }) {
   const firstRef = useRef(null);
   useModalKeys(onClose, firstRef);
   const E = T.ending;
@@ -690,6 +761,7 @@ function Ending({ T, t, profile, onClose }) {
         <p className="ending-stars" aria-hidden="true">★ ★ ★</p>
         <h2 id="ending-title" className="ending-title">{E.title}</h2>
         <p>{E.text}</p>
+        {medal && <p className="hl">🏅 {E.medal}</p>}
         <p className="hl">{E.cta}</p>
         <p className="links ending-links">
           <a ref={firstRef} className="btn btn-primary" href={`mailto:${profile.email}`}>✉ {E.email}</a>

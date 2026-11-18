@@ -7,15 +7,28 @@ import { isGameBoy, quantize } from '../lib/gameboy.js';
 const reduceMotion = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 
 // Sala de un edificio: el anfitrión saluda y ofrece ver la sección del CV o volver al pueblo.
-export default function Interior({ building, T, width, height, scale, onView, onExit }) {
+// En Mi casa se puede acariciar al gato de la cama: despierta y se une al visitante.
+export default function Interior({ building, T, width, height, scale, catGone, onPetCat, onView, onExit }) {
   const canvasRef = useRef(null);
   const text = T.interior[building.id];
-  const lines = text.lines;
+  const isCat = building.id === 'casa';
+  // La última línea se fija al entrar: si el gato se une ahora, se ve despertarse
+  // (la cama ya se redibuja vacía); en visitas posteriores, la cama ya está deshecha.
+  const [catJoined] = useState(catGone);
+  const lines = isCat ? [...text.lines, catJoined ? T.interior.catOut : T.interior.catWake] : text.lines;
   const [i, setI] = useState(0);
   const [shown, setShown] = useState(() => (reduceMotion() ? Infinity : 0));
   const line = lines[i];
   const typing = shown < line.length;
   const last = i === lines.length - 1;
+  const canPet = isCat && !catJoined && i === lines.length - 2 && !typing;
+  const pet = () => {
+    play('meow');
+    onPetCat?.();
+    play('select');
+    setI(i + 1);
+    setShown(reduceMotion() ? Infinity : 0);
+  };
   const viewRef = useRef(null);
 
   useEffect(() => {
@@ -36,7 +49,7 @@ export default function Interior({ building, T, width, height, scale, onView, on
       drawInterior(o, building.id, off.width, off.height, time, (pos) => {
         if (host) o.drawImage(host.down[0], pos.host.x, pos.host.y - (Math.floor(time / 520) % 2));
         o.drawImage(visitor.up[0], pos.visitor.x, pos.visitor.y);
-      });
+      }, { catGone });
       g.fillStyle = '#05060d'; g.fillRect(0, 0, canvas.width, canvas.height);
       g.imageSmoothingEnabled = false;
       g.drawImage(off, dx, 6, off.width * k, off.height * k);
@@ -45,7 +58,7 @@ export default function Interior({ building, T, width, height, scale, onView, on
     };
     raf = requestAnimationFrame(frame);
     return () => cancelAnimationFrame(raf);
-  }, [building, width, height]);
+  }, [building, width, height, catGone]);
 
   useEffect(() => {
     if (!typing) return;
@@ -57,6 +70,8 @@ export default function Interior({ building, T, width, height, scale, onView, on
 
   const advance = () => {
     if (typing) return setShown(Infinity);
+    // En Mi casa, avanzar desde la segunda línea es acariciar al gato.
+    if (canPet) return pet();
     if (!last) { play('select'); setI((n) => n + 1); setShown(reduceMotion() ? Infinity : 0); }
   };
 
@@ -83,7 +98,9 @@ export default function Interior({ building, T, width, height, scale, onView, on
           <span aria-hidden="true">{line.slice(0, shown)}<span className="dialog-ghost">{line.slice(shown)}</span></span>
         </p>
         <div className="town-dialog-actions">
-          {last && !typing ? (
+          {canPet ? (
+            <button type="button" className="btn btn-primary" onClick={pet}>🐾 {T.interior.pet}</button>
+          ) : last && !typing ? (
             <>
               <button type="button" className="btn" onClick={onExit}>{T.exit}</button>
               <button ref={viewRef} type="button" className="btn btn-primary" onClick={onView}>{T.interior.view(T.buildings[building.id].hint)}</button>

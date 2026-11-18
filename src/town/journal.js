@@ -5,11 +5,14 @@ import { BUILDINGS } from './map.js';
 const KEY = 'pueblo-diario';
 
 export const OBJECTIVES = [...BUILDINGS.map((b) => b.id), 'cv'];
+// El gato de Mi casa es un extra: se recuerda junto al diario pero no cuenta
+// para completar la partida (igual que la cueva, que va aparte).
+const KNOWN = [...OBJECTIVES, 'gato'];
 
 export function loadJournal() {
   try {
     const raw = JSON.parse(localStorage.getItem(KEY) ?? '{}');
-    return { done: OBJECTIVES.filter((id) => raw.done?.includes(id)), ended: Boolean(raw.ended) };
+    return { done: KNOWN.filter((id) => raw.done?.includes(id)), ended: Boolean(raw.ended) };
   } catch {
     return { done: [], ended: false };
   }
