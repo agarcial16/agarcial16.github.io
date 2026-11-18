@@ -70,7 +70,7 @@ export const projects = [
   },
   {
     name: 'ESIMEDIA · Streaming con microservicios',
-    art: 'streaming',
+    thumb: 'projects/esimedia.jpg',
     state: 'completada',
     party: 'Proyecto en equipo · 6 personas',
     summary:
