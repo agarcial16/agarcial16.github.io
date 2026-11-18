@@ -90,6 +90,14 @@ export const STRINGS = {
       leverLines: ['¡Clac! La palanca cede.', 'Se oye un crujido de madera cerca del estanque…'],
       leverDone: ['La palanca ya está bajada. El puente sigue en su sitio.'],
       chestLines: ['¡Has encontrado un pergamino!', 'Es el CV de Ángel en PDF. ¿Te lo llevas?'],
+      interior: {
+        view: (hint) => `Ver: ${hint}`,
+        casa: { speaker: 'Mi casa', lines: ['Huele a café recién hecho. En la cama duerme un gato.', 'Sobre la mesa hay una ficha de personaje con el nombre de Ángel.'] },
+        gremio: { speaker: 'Maestra del gremio', lines: ['¡Bienvenido al gremio de aventureros!', 'Aquí guardamos el registro de misiones de Ángel: su experiencia en DocPath y los proyectos en los que ha participado.'] },
+        academia: { speaker: 'Rector', lines: ['Bienvenido a la academia. Aquí se formó Ángel.', 'Grado en Ingeniería Informática y, ahora, el máster en la UCLM. Y algo de inglés, claro.'] },
+        taller: { speaker: 'Herrero', lines: ['¡Cuidado con la fragua, que quema!', 'Aquí se forjan las herramientas de Ángel: Cypress, Jenkins, Gatling, Java… Echa un vistazo al arsenal.'] },
+        posada: { speaker: 'Posadera', lines: ['¡Bienvenido a la posada! ¿Algo de beber?', '¿Buscas a Ángel para tu equipo? Te dejo cómo contactar con él… y su CV, por si quieres llevártelo.'] },
+      },
       battle: {
         appears: (name, boss) => (boss ? `¡El ${name} te corta el paso!` : `¡Aparece un ${name} salvaje!`),
         commands: { attack: 'Revisar código', skills: 'Habilidades', item: 'Café', run: 'Huir' },
@@ -224,6 +232,14 @@ export const STRINGS = {
       leverLines: ['Clack! The lever gives way.', 'You hear wood creaking near the pond…'],
       leverDone: ['The lever is already down. The bridge is still in place.'],
       chestLines: ['You found a scroll!', 'It’s Ángel’s CV as a PDF. Take it with you?'],
+      interior: {
+        view: (hint) => `See: ${hint}`,
+        casa: { speaker: 'My house', lines: ['It smells of fresh coffee. A cat is sleeping on the bed.', 'On the table there’s a character sheet with Ángel’s name on it.'] },
+        gremio: { speaker: 'Guild master', lines: ['Welcome to the Adventurers’ Guild!', 'We keep Ángel’s quest log here: his experience at DocPath and the projects he has worked on.'] },
+        academia: { speaker: 'Rector', lines: ['Welcome to the academy. This is where Ángel studied.', 'A bachelor’s in Computer Engineering and now the master’s at UCLM. Plus some English, of course.'] },
+        taller: { speaker: 'Blacksmith', lines: ['Mind the forge, it’s hot!', 'Ángel’s tools are forged here: Cypress, Jenkins, Gatling, Java… Take a look at the arsenal.'] },
+        posada: { speaker: 'Innkeeper', lines: ['Welcome to the inn! Something to drink?', 'Looking for Ángel to join your party? Here’s how to reach him… and his CV, if you want to take it with you.'] },
+      },
       battle: {
         appears: (name, boss) => (boss ? `The ${name} blocks your way!` : `A wild ${name} appears!`),
         commands: { attack: 'Code review', skills: 'Skills', item: 'Coffee', run: 'Run' },

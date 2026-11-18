@@ -561,3 +561,6 @@ html.gameboy .console-led { background: #d22; box-shadow: 0 0 6px #d22; }
   .battle-info { font-size: 0.75rem; min-height: 2.6em; }
   .battle-msg { font-size: 0.9rem; }
 }
+
+/* ===== Interiores ===== */
+.interior { position: absolute; inset: 0; z-index: 3; animation: panel-in 260ms ease-out; }

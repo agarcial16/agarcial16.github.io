@@ -12,6 +12,7 @@ import { ENEMIES } from './battle/data.js';
 
 // El combate se descarga solo al entrar en la cueva.
 const Battle = lazy(() => import('./battle/Battle.jsx'));
+const Interior = lazy(() => import('./Interior.jsx'));
 const CAVE_KEY = 'pueblo-cueva';
 const loadCave = () => { try { return JSON.parse(localStorage.getItem(CAVE_KEY) ?? '[]'); } catch { return []; } };
 import { track } from '../lib/analytics.js';
@@ -93,6 +94,7 @@ export default function Town({ places, onMenu }) {
   const [toast, setToast] = useState(null);
   const [ending, setEnding] = useState(false);
   const [battle, setBattle] = useState(null);
+  const [interior, setInterior] = useState(null);
   const [defeated, setDefeated] = useState(loadCave);
   const defeatedRef = useRef(defeated);
   defeatedRef.current = defeated;
@@ -190,7 +192,7 @@ export default function Town({ places, onMenu }) {
     held: [], tap: null, paused: false, chestOpen: false, chestT0: 0, talked: false, puffs: [], leverT0: 0,
     anim: reduceMotion() ? null : { kind: 'fadein', t0: performance.now() },
   });
-  game.current.paused = Boolean(dialog || place || showJournal || ending || battle);
+  game.current.paused = Boolean(dialog || place || showJournal || ending || battle || interior);
 
   const openPlace = useCallback((b) => { setPlace(b); complete(b.id); }, [complete]);
 
@@ -307,7 +309,7 @@ export default function Town({ places, onMenu }) {
           s.dir = 'up'; s.from = { x: s.x, y: s.y }; s.y -= 1; s.t = 0;
         }
         fade = Math.min(1, Math.max(0, (k - ENTER_MS.fade) / (ENTER_MS.done - ENTER_MS.fade)));
-        if (k >= ENTER_MS.done) { anim.done = true; openPlace(anim.b); }
+        if (k >= ENTER_MS.done) { anim.done = true; setInterior(anim.b); complete(anim.b.id); }
       } else if (anim?.kind === 'enter') {
         fade = 1;
       } else if (anim?.kind === 'fadein') {
@@ -416,7 +418,7 @@ export default function Town({ places, onMenu }) {
     };
     raf = requestAnimationFrame(frame);
     return () => cancelAnimationFrame(raf);
-  }, [vp, enter, openPlace, startBattle]);
+  }, [vp, enter, complete, startBattle]);
 
   // Teclado
   useEffect(() => {
@@ -459,19 +461,19 @@ export default function Town({ places, onMenu }) {
     e.preventDefault();
     e.currentTarget.setPointerCapture?.(e.pointerId);
     feedKonami(dir);
-    if (battle) { window.dispatchEvent(new CustomEvent('battle-input', { detail: dir })); return; }
+    if (battle || interior) { window.dispatchEvent(new CustomEvent('battle-input', { detail: dir })); return; }
     game.current.held = [dir];
     game.current.tap = dir;
   };
   const pressA = () => {
     feedKonami('a');
-    if (battle) return window.dispatchEvent(new CustomEvent('battle-input', { detail: 'a' }));
+    if (battle || interior) return window.dispatchEvent(new CustomEvent('battle-input', { detail: 'a' }));
     if (dialog) return;
     interact();
   };
   const pressB = () => {
     feedKonami('b');
-    if (battle) window.dispatchEvent(new CustomEvent('battle-input', { detail: 'b' }));
+    if (battle || interior) window.dispatchEvent(new CustomEvent('battle-input', { detail: 'b' }));
     else if (dialog) setDialog(null);
     else if (showJournal) setShowJournal(false);
     else if (ending) setEnding(false);
@@ -518,12 +520,21 @@ export default function Town({ places, onMenu }) {
                 <span className="hl">{T.journal.done}</span> {objectiveLabel(toast)}
               </p>
             )}
-            {prompt && !dialog && !place && !showJournal && !ending && !battle && (
+            {prompt && !dialog && !place && !showJournal && !ending && !battle && !interior && (
               <button type="button" className="town-prompt" onClick={interact}>
                 <span className="town-key">{touch ? 'A' : 'Enter'}</span> {prompt}
               </button>
             )}
             {dialog && <TownDialog {...dialog} T={T} onClose={closeDialog} />}
+            {interior && (
+              <Suspense fallback={null}>
+                <Interior
+                  building={interior} T={T} width={vp.w} height={vp.h} scale={vp.scale}
+                  onView={() => { setInterior(null); setPlace(interior); }}
+                  onExit={() => { setInterior(null); leave(); }}
+                />
+              </Suspense>
+            )}
             {battle && (
               <Suspense fallback={null}>
                 <Battle key={battle.id} enemy={battle} lang={lang} T={T} width={vp.w} height={vp.h} scale={vp.scale} onEnd={endBattle} />
