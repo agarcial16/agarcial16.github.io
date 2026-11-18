@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { TILE, W, H, BUILDINGS, START, NPC, CHEST, cellAt, ground } from './map.js';
-import { drawMap, drawChest, buildSprites, HERO, VISITOR } from './art.js';
+import { drawMap, drawChest, buildSprites, ANGEL, ANGEL_SHAPE, VISITOR } from './art.js';
 import { drawAmbient, drawButterflies, drawPuffs, drawSparkles, drawBubble, drawOpenDoor } from './effects.js';
 import { profile } from '../data/cv.js';
+import { play, setSound, loadPreference, resumeOnGesture, stopAll } from './sound.js';
 
 const STEP_MS = 150;
 const DIRS = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] };
@@ -62,6 +63,17 @@ export default function Town({ places, onMenu }) {
   const [prompt, setPrompt] = useState(null);
   const [dialog, setDialog] = useState(null);
   const [place, setPlace] = useState(null);
+  const [sound, setSoundState] = useState(loadPreference);
+
+  useEffect(() => {
+    const off = resumeOnGesture();
+    return () => { off(); stopAll(); };
+  }, []);
+  const toggleSound = () => {
+    const on = !sound;
+    setSoundState(on);
+    setSound(on).then(() => on && play('on'));
+  };
 
   const game = useRef({
     x: START.x, y: START.y, dir: START.dir, from: null, t: 0, step: 0,
@@ -78,9 +90,11 @@ export default function Town({ places, onMenu }) {
     if (instant || reduceMotion()) {
       s.from = null;
       s.anim = { kind: 'enter', b, t0: 0, done: true };
+      play('page');
       setPlace(b);
     } else {
       s.anim = { kind: 'enter', b, t0: performance.now() };
+      play('door-open');
     }
   }, []);
 
@@ -89,6 +103,7 @@ export default function Town({ places, onMenu }) {
     const b = s.anim?.b;
     if (b) { s.x = b.door.x; s.y = b.door.y + 1; s.dir = 'down'; s.from = null; }
     s.anim = reduceMotion() ? null : { kind: 'fadein', b, t0: performance.now() };
+    if (b) play('door-close');
     setPlace(null);
   }, []);
 
@@ -99,10 +114,10 @@ export default function Town({ places, onMenu }) {
     const cell = cellAt(s.x + dx, s.y + dy);
     s.held = [];
     if (cell?.kind === 'door') enter(cell.building);
-    else if (cell?.kind === 'npc') { s.talked = true; setDialog({ speaker: profile.name.split(' ')[0], lines: HOST_LINES }); }
-    else if (cell?.kind === 'sign') setDialog({ speaker: 'Cartel', lines: SIGN_LINES });
+    else if (cell?.kind === 'npc') { s.talked = true; play('talk'); setDialog({ speaker: profile.name.split(' ')[0], lines: HOST_LINES }); }
+    else if (cell?.kind === 'sign') { play('page'); setDialog({ speaker: 'Cartel', lines: SIGN_LINES }); }
     else if (cell?.kind === 'chest') {
-      if (!s.chestOpen) { s.chestOpen = true; s.chestT0 = performance.now(); }
+      if (!s.chestOpen) { s.chestOpen = true; s.chestT0 = performance.now(); play('chest'); setTimeout(() => play('item'), 180); }
       setDialog({ speaker: 'Cofre', lines: CHEST_LINES, action: { label: 'Descargar CV (PDF)', href: profile.cvPdf } });
     }
   }, [enter]);
@@ -113,7 +128,7 @@ export default function Town({ places, onMenu }) {
     const g = canvas.getContext('2d');
     const map = drawMap();
     const visitor = buildSprites(VISITOR);
-    const host = buildSprites(HERO);
+    const host = buildSprites(ANGEL, ANGEL_SHAPE);
     const still = reduceMotion();
     let raf, last = performance.now(), lastPrompt = undefined;
 
@@ -143,6 +158,7 @@ export default function Town({ places, onMenu }) {
         s.t += dt / STEP_MS;
         if (s.t >= 1) {
           s.from = null; s.t = 0; s.step++;
+          play('step');
           if (!still && ground[s.y]?.[s.x] === 'path') s.puffs.push({ x: s.x * TILE, y: s.y * TILE, t0: now });
         }
       }
@@ -154,6 +170,7 @@ export default function Town({ places, onMenu }) {
         const cell = cellAt(s.x + dx, s.y + dy);
         if (cell?.kind === 'door') enter(cell.building);
         else if (!cell) { s.from = { x: s.x, y: s.y }; s.x += dx; s.y += dy; s.t = 0; }
+        else if (now - (s.bumpAt ?? 0) > 280) { s.bumpAt = now; play('bump'); }
       }
 
       const fx = s.from ? s.from.x + (s.x - s.from.x) * s.t : s.x;
@@ -266,6 +283,7 @@ export default function Town({ places, onMenu }) {
       <header className="town-bar" style={{ width: vp.w * vp.scale }}>
         <h1 className="town-title">Villa Portafolio</h1>
         <div className="town-actions">
+          <button type="button" className="btn" aria-pressed={sound} onClick={toggleSound}>Sonido: {sound ? 'sí' : 'no'}</button>
           <button type="button" className="btn" onClick={onMenu}>Menú <span className="muted small">(Esc)</span></button>
         </div>
       </header>
@@ -297,7 +315,7 @@ export default function Town({ places, onMenu }) {
         <button type="button" tabIndex={-1} className="pad pad-a" onClick={interact}>A</button>
       </div>
 
-      <p className="town-help muted small">Flechas o WASD para moverte · Enter o Espacio para interactuar</p>
+      <p className="town-help muted small">Flechas o WASD para moverte · Enter o Espacio para interactuar · Sonidos de <a href="https://kenney.nl" target="_blank" rel="noreferrer">Kenney</a> (CC0)</p>
       <nav className="town-shortcuts" aria-label="Atajos a los edificios">
         <span className="muted small">Atajos:</span>
         {BUILDINGS.map((b) => (
@@ -319,15 +337,16 @@ function TownDialog({ speaker, lines, action, onClose }) {
   const next = useCallback(() => {
     if (typing) return setShown(Infinity);
     if (last) return onClose();
+    play('select');
     setI((n) => n + 1);
     setShown(reduceMotion() ? Infinity : 0);
   }, [typing, last, onClose]);
 
   useEffect(() => {
     if (!typing) return;
-    const t = setTimeout(() => setShown((n) => n + 1), 18);
+    const t = setTimeout(() => { if (shown % 3 === 0 && line[shown] !== ' ') play('blip'); setShown((n) => n + 1); }, 18);
     return () => clearTimeout(t);
-  }, [typing, shown]);
+  }, [typing, shown, line]);
   const ref = useRef(null);
   useEffect(() => ref.current?.focus(), []);
 

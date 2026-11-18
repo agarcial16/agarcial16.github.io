@@ -208,8 +208,7 @@ ul, ol { margin: 0; padding: 0; list-style: none; }
   border-radius: 6px;
   padding: 10px;
 }
-.avatar { display: block; fill: #8ea0ff; }
-.avatar-q { fill: var(--gold); font-family: var(--font-pixel); }
+.photo { display: block; width: 128px; height: 128px; object-fit: cover; border-radius: 3px; image-rendering: auto; }
 .status-main { flex: 1; min-width: 240px; }
 .status-name {
   font-family: var(--font-pixel);
@@ -374,7 +373,8 @@ ul, ol { margin: 0; padding: 0; list-style: none; }
   padding: 20px 16px 28px;
 }
 .town-loading { min-height: 100vh; display: grid; place-items: center; font-family: var(--font-pixel); font-size: 0.7rem; }
-.town-bar { display: flex; justify-content: space-between; align-items: center; gap: 12px; max-width: 100%; }
+.town-bar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px 12px; max-width: 100%; }
+.town-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 .town-title { font-family: var(--font-pixel); font-size: 0.8rem; color: var(--gold); text-shadow: var(--shadow); }
 .town-frame { padding: 6px; max-width: 100%; }
 .town-canvas { display: block; image-rendering: pixelated; border-radius: 3px; touch-action: none; }

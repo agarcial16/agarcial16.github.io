@@ -13,6 +13,7 @@ export const profile = {
   linkedin: 'https://www.linkedin.com/in/agarcialopezlira/',
   github: 'https://github.com/agarcial16',
   cvPdf: 'CV_Angel_Garcia_Lopezlira.pdf',
+  photo: 'avatar.jpg',
   intro: [
     '¡Hola, viajero! Soy Ángel, ingeniero informático especializado en automatización de pruebas y DevOps.',
     'Diseño pruebas E2E en BDD, analizo rendimiento y monto pipelines de CI/CD con entornos efímeros.',

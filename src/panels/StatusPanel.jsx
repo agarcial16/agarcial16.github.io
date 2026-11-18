@@ -1,5 +1,4 @@
 import Window from '../components/Window.jsx';
-import Avatar from '../components/Avatar.jsx';
 import DialogBox from '../components/DialogBox.jsx';
 import { profile } from '../data/cv.js';
 import { getLevel } from '../lib/level.js';
@@ -10,7 +9,7 @@ export default function StatusPanel() {
     <div className="panel-stack">
       <Window className="status">
         <div className="status-avatar">
-          <Avatar />
+          <img className="photo" src={profile.photo} alt={`Foto de ${profile.name}`} width="128" height="128" />
         </div>
         <div className="status-main">
           <h1 className="status-name">{profile.name}</h1>

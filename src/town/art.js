@@ -159,6 +159,12 @@ const LEGS_SIDE = [
 
 export const HERO = { k: '#1a1230', h: '#5a3a22', s: '#f2c49b', e: '#1a1230', t: '#3a5bd9', T: '#2a3f9e', b: '#ffd866', p: '#3b3350', o: '#6b4226' };
 // El jugador es el visitante; Ángel es el NPC que lo recibe.
+export const ANGEL = {
+  k: '#0d0b14', h: '#1e1d26', H: '#45445a', s: '#e2b48f', e: '#1a1230', g: '#26262e', l: '#d6e6ff',
+  B: '#2b211c', t: '#9a5a2e', w: '#f4f4f8', n: '#121218', a: '#2a2a35', p: '#22222c', o: '#111118',
+};
+export { ANGEL_SHAPE };
+
 export const VISITOR = { ...HERO, h: '#e0b040', t: '#3a9b5b', T: '#2a6e40', b: '#c98a12', p: '#4a4a5e' };
 
 function spriteCanvas(rows, pal, flip) {
@@ -171,12 +177,32 @@ function spriteCanvas(rows, pal, flip) {
 }
 
 // sprites[dir][frame]: frame 0 quieto, 1 y 2 pasos.
-export function buildSprites(pal) {
+const BASE = {
+  down: [HEAD_DOWN, BODY_FRONT], up: [HEAD_UP, BODY_FRONT], side: [HEAD_SIDE, BODY_SIDE],
+};
+
+// Ángel, a partir de su foto: pelo negro abundante con flequillo, gafas de pasta,
+// bigote y perilla, camisa blanca con corbata negra y estola marrón.
+const ANGEL_SHAPE = {
+  down: [
+    ['....kkkkkkkk....', '...khhHHhhhhk...', '..khhHhhhhhhhk..', '..khhhhhhhhhhk..', '..khgggssggghk..', '..ksgegssgegsk..', '..ksgggssgggsk..', '..ksssBBBBsssk..', '...kssBBBBssk...'],
+    ['...kttwnnwttk...', '..kattwnnwttak..', '..kattwnnwttak..', '...kttwnnwttk...', '...kppppppppk...'],
+  ],
+  up: [
+    ['....kkkkkkkk....', '...khhHHhhhhk...', '..khhHhhhhhhhk..', '..khhhhhhhhhhk..', '..khhhhhhhhhhk..', '..khhhhhhhhhhk..', '..khhhhhhhhhhk..', '...khhhhhhhhk...', '....kssssssk....'],
+    ['...kttttttttk...', '..kattttttttak..', '..kattttttttak..', '...kttttttttk...', '...kppppppppk...'],
+  ],
+  side: [
+    ['....kkkkkkk.....', '...khhHHhhhk....', '..khhHhhhhhhk...', '..khhhhhhhhhk...', '..kgggghhhhhk...', '..kglggsshhk....', '..kggggsshhk....', '..kBBBssssk.....', '...kBBBssk......'],
+    ['....kntttttk....', '....ktaatttk....', '....ktaatttk....', '....kttttttk....', '....kppppppk....'],
+  ],
+};
+
+export function buildSprites(pal, shape = BASE) {
   const out = {};
   for (const dir of ['down', 'up', 'left', 'right']) {
     const side = dir === 'left' || dir === 'right';
-    const head = side ? HEAD_SIDE : dir === 'up' ? HEAD_UP : HEAD_DOWN;
-    const body = side ? BODY_SIDE : BODY_FRONT;
+    const [head, body] = shape[side ? 'side' : dir];
     const legs = side ? LEGS_SIDE : LEGS_FRONT;
     out[dir] = legs.map((l) => spriteCanvas([...head, ...body, ...l].slice(0, 16), pal, dir === 'right'));
   }
