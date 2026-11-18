@@ -80,3 +80,16 @@ export function drawOpenDoor(g, b, camX, camY) {
   rect(g, '#1a1230', dx + 3, dy + 2, 10, 14);
   rect(g, '#7a4a28', dx + 3, dy + 2, 2, 14);
 }
+
+// Brillo intermitente sobre el cofre cerrado: la pista visual de que hay algo en el estanque.
+export function drawGlint(g, time, x, y) {
+  const k = (time % 2400) / 2400;
+  if (k > 0.3) return;
+  const r = k < 0.15 ? 1 + Math.floor(k / 0.05) : 3 - Math.floor((k - 0.15) / 0.05);
+  const cx = x + 11, cy = y + 6;
+  rect(g, '#ffffff', cx, cy);
+  for (let i = 1; i <= r; i++) {
+    const c = i === r ? '#ffd866' : '#ffffff';
+    rect(g, c, cx - i, cy); rect(g, c, cx + i, cy); rect(g, c, cx, cy - i); rect(g, c, cx, cy + i);
+  }
+}

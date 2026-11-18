@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { TILE, W, H, BUILDINGS, START, NPC, CHEST, cellAt, ground } from './map.js';
-import { drawMap, drawChest, buildSprites, ANGEL, ANGEL_SHAPE, VISITOR } from './art.js';
-import { drawAmbient, drawButterflies, drawPuffs, drawSparkles, drawBubble, drawOpenDoor } from './effects.js';
+import { TILE, W, H, BUILDINGS, START, NPC, CHEST, LEVER, BRIDGE, world, cellAt, ground } from './map.js';
+import { drawMap, drawChest, drawBridge, drawLever, buildSprites, ANGEL, ANGEL_SHAPE, VISITOR } from './art.js';
+import { drawAmbient, drawButterflies, drawPuffs, drawSparkles, drawBubble, drawOpenDoor, drawGlint } from './effects.js';
 import { profile } from '../data/cv.js';
 import { play, setSound, loadPreference, resumeOnGesture, stopAll } from './sound.js';
 
@@ -13,18 +13,23 @@ const KEYS = {
 };
 const ACTION_KEYS = new Set(['Enter', ' ', 'z', 'Z', 'e', 'E']);
 
+// Lo que cuento sobre mí ya está en «Mi casa»: aquí solo doy la bienvenida y una pista.
 const HOST_LINES = [
-  ...profile.intro,
-  'Cada edificio del pueblo guarda una parte de mi historia: entra por la puerta para verla.',
+  '¡Hola, viajero! Soy Ángel. Bienvenido a Villa Portafolio.',
+  'Cada edificio guarda una parte de mi historia; el cartel de cada puerta te dice cuál.',
+  'Por cierto… dicen que en mitad del estanque hay un cofre, y que alguien escondió una palanca detrás de mi casa.',
   'Si tienes prisa, pulsa Esc o «Menú» y lo verás todo en la vista rápida.',
 ];
-const SIGN_LINES = [
-  'Villa Portafolio',
-  BUILDINGS.map((b) => `${b.name}: ${b.hint.toLowerCase()}`).join(' · '),
+const HOST_LINES_AFTER = [
+  '¡Has encontrado el puente! Ya puedes llegar al cofre del estanque.',
+  'Si tienes prisa, pulsa Esc o «Menú» y lo verás todo en la vista rápida.',
 ];
+const LEVER_LINES = ['¡Clac! La palanca cede.', 'Se oye un crujido de madera cerca del estanque…'];
+const LEVER_DONE = ['La palanca ya está bajada. El puente sigue en su sitio.'];
+const BRIDGE_MS = 450;
 const CHEST_LINES = ['¡Has encontrado un pergamino!', 'Es el CV de Ángel en PDF. ¿Te lo llevas?'];
 
-const PROMPTS = { door: 'Entrar', npc: 'Hablar', sign: 'Leer', chest: 'Abrir' };
+const PROMPTS = { door: 'Entrar', npc: 'Hablar', sign: 'Leer', chest: 'Abrir', lever: 'Tirar' };
 
 // Escala entera para que los píxeles se vean nítidos; en pantallas estrechas la cámara sigue al héroe.
 function useViewport(ref) {
@@ -66,6 +71,7 @@ export default function Town({ places, onMenu }) {
   const [sound, setSoundState] = useState(loadPreference);
 
   useEffect(() => {
+    world.bridge = false; // cada partida empieza sin puente
     const off = resumeOnGesture();
     return () => { off(); stopAll(); };
   }, []);
@@ -77,7 +83,7 @@ export default function Town({ places, onMenu }) {
 
   const game = useRef({
     x: START.x, y: START.y, dir: START.dir, from: null, t: 0, step: 0,
-    held: [], tap: null, paused: false, chestOpen: false, chestT0: 0, talked: false, puffs: [],
+    held: [], tap: null, paused: false, chestOpen: false, chestT0: 0, talked: false, puffs: [], leverT0: 0,
     anim: reduceMotion() ? null : { kind: 'fadein', t0: performance.now() },
   });
   game.current.paused = Boolean(dialog || place);
@@ -114,8 +120,14 @@ export default function Town({ places, onMenu }) {
     const cell = cellAt(s.x + dx, s.y + dy);
     s.held = [];
     if (cell?.kind === 'door') enter(cell.building);
-    else if (cell?.kind === 'npc') { s.talked = true; play('talk'); setDialog({ speaker: profile.name.split(' ')[0], lines: HOST_LINES }); }
-    else if (cell?.kind === 'sign') { play('page'); setDialog({ speaker: 'Cartel', lines: SIGN_LINES }); }
+    else if (cell?.kind === 'npc') { s.talked = true; play('talk'); setDialog({ speaker: profile.name.split(' ')[0], lines: s.leverT0 ? HOST_LINES_AFTER : HOST_LINES }); }
+    else if (cell?.kind === 'sign') { play('page'); setDialog({ speaker: cell.sign.title, lines: cell.sign.lines }); }
+    else if (cell?.kind === 'lever') {
+      if (s.leverT0) return setDialog({ speaker: 'Palanca', lines: LEVER_DONE });
+      s.leverT0 = performance.now();
+      play('lever'); setTimeout(() => play('bridge'), 350);
+      setDialog({ speaker: 'Palanca', lines: LEVER_LINES });
+    }
     else if (cell?.kind === 'chest') {
       if (!s.chestOpen) { s.chestOpen = true; s.chestT0 = performance.now(); play('chest'); setTimeout(() => play('item'), 180); }
       setDialog({ speaker: 'Cofre', lines: CHEST_LINES, action: { label: 'Descargar CV (PDF)', href: profile.cvPdf } });
@@ -184,7 +196,13 @@ export default function Town({ places, onMenu }) {
       if (!still) drawAmbient(g, time, camX, camY);
       const doorB = anim?.b && (anim.kind === 'enter' || now - anim.t0 < FADE_IN_MS * 0.8) ? anim.b : null;
       if (doorB && (anim.kind === 'fadein' || now - anim.t0 >= ENTER_MS.open * 0.5 || anim.done)) drawOpenDoor(g, doorB, camX, camY);
+      // Puente: se tiende tablón a tablón al tirar de la palanca y se puede pisar al terminar.
+      const bridge = !s.leverT0 ? 0 : still ? BRIDGE.length : Math.min(BRIDGE.length, Math.max(0, (now - s.leverT0 - 400) / BRIDGE_MS));
+      if (bridge >= BRIDGE.length) world.bridge = true;
+      drawBridge(g, bridge, camX, camY);
+      drawLever(g, LEVER.x * TILE - camX, LEVER.y * TILE - camY, Boolean(s.leverT0));
       drawChest(g, CHEST.x * TILE - camX, CHEST.y * TILE - camY, s.chestOpen);
+      if (!s.chestOpen && !still) drawGlint(g, time, CHEST.x * TILE - camX, CHEST.y * TILE - camY);
       drawPuffs(g, s.puffs, now, camX, camY);
 
       const shadow = (x, y) => { g.fillStyle = '#00000040'; g.fillRect(x + 3, y + 14, 10, 2); };

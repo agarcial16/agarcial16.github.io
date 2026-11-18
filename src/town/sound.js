@@ -1,8 +1,8 @@
 // Sonido del pueblo. Efectos: packs CC0 de Kenney (public/audio). Música: melodía propia
 // generada con Web Audio. Desactivado por defecto; la preferencia se guarda en el navegador.
 const KEY = 'pueblo-sonido';
-const FILES = ['step0', 'step1', 'step2', 'step3', 'door-open', 'door-close', 'chest', 'page', 'item', 'talk', 'blip', 'select', 'bump', 'on'];
-const VOLUME = { step: 0.22, blip: 0.25, bump: 0.35, select: 0.45, page: 0.5, talk: 0.5, item: 0.55, chest: 0.6, 'door-open': 0.55, 'door-close': 0.5, on: 0.5 };
+const FILES = ['step0', 'step1', 'step2', 'step3', 'door-open', 'door-close', 'chest', 'page', 'item', 'talk', 'blip', 'select', 'bump', 'on', 'lever', 'bridge'];
+const VOLUME = { step: 0.22, blip: 0.25, bump: 0.35, select: 0.45, page: 0.5, talk: 0.5, item: 0.55, chest: 0.6, 'door-open': 0.55, 'door-close': 0.5, on: 0.5, lever: 0.6, bridge: 0.6 };
 
 let ctx = null, sfx = null, musicGain = null, buffers = {}, loading = null, enabled = false, music = null, stepIndex = 0;
 

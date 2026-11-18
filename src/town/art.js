@@ -1,5 +1,5 @@
 // Pixel art del pueblo, dibujado por código (sin imágenes externas).
-import { TILE, W, H, BUILDINGS, ground, SIGN } from './map.js';
+import { TILE, W, H, BUILDINGS, ground, SIGNS, BRIDGE } from './map.js';
 
 const rnd = (x, y, k) => (((x * 73856093) ^ (y * 19349663) ^ (k * 83492791)) >>> 0) % 1000 / 1000;
 
@@ -109,6 +109,40 @@ function sign(g, ox, oy) {
   for (const y of [4, 6]) px(g, '#6b4226', ox + 4, oy + y, 8, 1);
 }
 
+// Orilla de la isla: arena y una línea oscura donde toca el agua.
+function shore(g, ox, oy, tx, ty) {
+  const wet = (x, y) => ground[y]?.[x] === 'water';
+  if (wet(tx, ty - 1)) { px(g, '#d9c08a', ox, oy, TILE, 2); px(g, '#1d4a9e', ox, oy, TILE, 1); }
+  if (wet(tx, ty + 1)) { px(g, '#d9c08a', ox, oy + 13, TILE, 3); px(g, '#c4a36a', ox, oy + 15, TILE, 1); }
+  if (wet(tx - 1, ty)) px(g, '#d9c08a', ox, oy, 2, TILE);
+  if (wet(tx + 1, ty)) px(g, '#d9c08a', ox + 14, oy, 2, TILE);
+}
+
+// Puente de tablones; progress va de 0 a BRIDGE.length (se dibuja tablón a tablón).
+export function drawBridge(g, progress, camX, camY) {
+  BRIDGE.forEach(([x, y], i) => {
+    const planks = Math.max(0, Math.min(5, Math.floor((progress - i) * 5)));
+    if (!planks) return;
+    const ox = x * TILE - camX, oy = y * TILE - camY;
+    for (let p = 0; p < planks; p++) {
+      px(g, '#3b2414', ox + 2, oy + p * 3 + 1, 12, 3);
+      px(g, p % 2 ? '#a0703e' : '#b07e48', ox + 3, oy + p * 3 + 1, 10, 2);
+    }
+    px(g, '#5a3a22', ox + 1, oy, 2, planks * 3 + 1);
+    px(g, '#5a3a22', ox + 13, oy, 2, planks * 3 + 1);
+  });
+}
+
+export function drawLever(g, ox, oy, on) {
+  px(g, '#00000033', ox + 3, oy + 13, 10, 2);
+  px(g, '#4a4a58', ox + 3, oy + 10, 10, 4);
+  px(g, '#7d7d8c', ox + 4, oy + 10, 8, 2);
+  const dir = on ? 1 : -1;
+  for (let i = 0; i < 6; i++) px(g, '#6b4226', ox + 7 + Math.round(dir * i * 0.6), oy + 9 - i, 2, 1);
+  px(g, '#e04848', ox + 6 + Math.round(dir * 4), oy + 1, 4, 3);
+  px(g, '#ff8a8a', ox + 6 + Math.round(dir * 4), oy + 1, 2, 1);
+}
+
 // Capa estática con todo el mapa.
 export function drawMap() {
   const c = document.createElement('canvas');
@@ -120,9 +154,10 @@ export function drawMap() {
     else if (t === 'path') path(g, ox, oy, x, y);
     else grass(g, ox, oy, x, y);
     if (t === 'tree') tree(g, ox, oy);
+    if (t === 'island') shore(g, ox, oy, x, y);
   }
   BUILDINGS.forEach((b) => building(g, b));
-  sign(g, SIGN.x * TILE, SIGN.y * TILE);
+  SIGNS.forEach((s) => sign(g, s.x * TILE, s.y * TILE));
   return c;
 }
 
