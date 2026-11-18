@@ -1,4 +1,5 @@
 import Window from '../components/Window.jsx';
+import ProjectCover from '../components/ProjectCover.jsx';
 import { experience, projects } from '../data/cv.js';
 
 function QuestBadge({ state }) {
@@ -31,7 +32,9 @@ export default function QuestsPanel() {
       <Window title="Misiones de grupo · Proyectos">
         <ol className="quests">
           {projects.map((q) => (
-            <li key={q.name} className="quest">
+            <li key={q.name} className="quest quest-project">
+              <ProjectCover thumb={q.thumb} art={q.art} name={q.name} />
+              <div>
               <header className="quest-head">
                 <h3>{q.name}</h3>
                 <QuestBadge state={q.state} />
@@ -45,6 +48,7 @@ export default function QuestsPanel() {
                   {q.links.map((l) => <a key={l.href} className="btn" href={l.href} target="_blank" rel="noreferrer">{l.label} ↗</a>)}
                 </p>
               )}
+              </div>
             </li>
           ))}
         </ol>

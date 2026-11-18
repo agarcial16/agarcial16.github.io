@@ -310,6 +310,19 @@ ul, ol { margin: 0; padding: 0; list-style: none; }
 .badge.is-active { color: var(--gold); }
 .badge.is-done { color: var(--green); }
 
+/* ===== Miniaturas de proyecto (cartucho) ===== */
+.quest-project { display: grid; grid-template-columns: 220px 1fr; gap: 18px; align-items: start; }
+.cover {
+  margin: 0;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  background: var(--win-edge);
+  border: 3px solid var(--win-border);
+  border-radius: 6px 6px 14px 14px;
+  box-shadow: 0 0 0 3px var(--win-edge), 4px 5px 0 3px rgba(0, 0, 0, 0.35);
+}
+.cover img, .cover svg { display: block; width: 100%; height: 100%; object-fit: cover; }
+
 /* ===== Historia ===== */
 .timeline { display: grid; gap: 16px; }
 .timeline li { display: grid; grid-template-columns: 64px 1fr auto; gap: 16px; align-items: center; }
@@ -340,6 +353,7 @@ ul, ol { margin: 0; padding: 0; list-style: none; }
   .win { padding: 16px; }
   .status { justify-content: center; }
   .contact li, .passives li { grid-template-columns: 1fr; gap: 2px; }
+  .quest-project { grid-template-columns: 1fr; gap: 12px; }
   .quest-org { grid-template-columns: 44px 1fr; gap: 10px; }
   .quest-org .emblem { width: 44px; height: 44px; }
   .quest-org .emblem img { width: 32px; height: 32px; }

@@ -58,6 +58,7 @@ export const experience = [
 export const projects = [
   {
     name: 'MBRG · Map Battle Royale Game',
+    thumb: 'projects/mbrg.jpg',
     state: 'en curso',
     summary: 'Battle royale sobre mapas de estilo EU4/RISK, con servidor, visor web y bot de Discord.',
     points: [
@@ -69,6 +70,7 @@ export const projects = [
   },
   {
     name: 'ESIMEDIA · Streaming con microservicios',
+    art: 'streaming',
     state: 'completada',
     party: 'Proyecto en equipo · 6 personas',
     summary:
@@ -82,6 +84,7 @@ export const projects = [
   },
   {
     name: 'Quantum Web Generator',
+    art: 'quantum',
     state: 'completada',
     party: 'Proyecto en equipo',
     summary:
