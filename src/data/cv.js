@@ -87,7 +87,7 @@ export const projects = [
     name: 'Quantum Web Generator',
     art: 'quantum',
     state: 'completada',
-    party: 'Proyecto en equipo',
+    party: 'Proyecto en equipo · 4 personas',
     summary:
       'Sistema distribuido con tres backends, persistencia políglota y seguridad reforzada (OWASP Top 10).',
     points: [],
