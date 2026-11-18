@@ -6,8 +6,8 @@ export const HERO_STATS = { hp: 60, mp: 20, coffees: 2 };
 export const SKILLS = [
   {
     id: 'e2e', mp: 3, power: 9, color: '#86f5a6',
-    es: { name: 'Escenario E2E', info: 'Cypress + Gherkin con Page Object Model. Definí 100 escenarios así en DocPath.' },
-    en: { name: 'E2E scenario', info: 'Cypress + Gherkin with the Page Object Model. I defined 100 of these at DocPath.' },
+    es: { name: 'Escenario E2E', info: 'Cypress + Gherkin con Page Object Model: pruebas de extremo a extremo que cualquiera puede leer.' },
+    en: { name: 'E2E scenario', info: 'Cypress + Gherkin with the Page Object Model: end-to-end tests anyone can read.' },
   },
   {
     id: 'vagrant', mp: 3, power: 9, color: '#9fd3ff',
@@ -21,8 +21,8 @@ export const SKILLS = [
   },
   {
     id: 'agents', mp: 8, power: 16, color: '#d59bff',
-    es: { name: 'Equipo de agentes', info: 'Orquestador, planner, implementer y reviewer, como en MBRG. Fuerte contra todo, pero gasta mucho PM.' },
-    en: { name: 'Agent squad', info: 'Orchestrator, planner, implementer and reviewer, as in MBRG. Strong against anything, but costly in MP.' },
+    es: { name: 'Equipo de agentes', info: 'Orquestador, planner, implementer y reviewer trabajando en cadena. Fuerte contra todo, pero gasta mucho PM.' },
+    en: { name: 'Agent squad', info: 'Orchestrator, planner, implementer and reviewer working as one. Strong against anything, but costly in MP.' },
   },
 ];
 

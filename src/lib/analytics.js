@@ -1,6 +1,6 @@
 // Estadísticas de visitas con GoatCounter: sin cookies y sin datos personales.
 // Se activa al rellenar CODE con el código de la cuenta (https://<CODE>.goatcounter.com).
-const CODE = '';
+const CODE = 'agarcial16';
 
 const enabled = () => CODE && !['localhost', '127.0.0.1'].includes(window.location.hostname);
 

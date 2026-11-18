@@ -33,9 +33,10 @@ export default function Interior({ building, T, width, height, scale, onView, on
     let raf;
     const frame = (now) => {
       const time = still ? 0 : now;
-      const pos = drawInterior(o, building.id, off.width, off.height, time);
-      if (host) o.drawImage(host.down[0], pos.host.x, pos.host.y - (Math.floor(time / 520) % 2));
-      o.drawImage(visitor.up[0], pos.visitor.x, pos.visitor.y);
+      drawInterior(o, building.id, off.width, off.height, time, (pos) => {
+        if (host) o.drawImage(host.down[0], pos.host.x, pos.host.y - (Math.floor(time / 520) % 2));
+        o.drawImage(visitor.up[0], pos.visitor.x, pos.visitor.y);
+      });
       g.fillStyle = '#05060d'; g.fillRect(0, 0, canvas.width, canvas.height);
       g.imageSmoothingEnabled = false;
       g.drawImage(off, dx, 6, off.width * k, off.height * k);

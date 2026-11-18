@@ -16,8 +16,10 @@ const WALLS = {
   taller: ['#8d8d9c', '#6d6d7c'], posada: ['#c99a6b', '#a77b4f'],
 };
 
-// Devuelve dónde están el anfitrión y el visitante para que el componente los dibuje encima.
-export function drawInterior(g, id, W, H, time) {
+// Devuelve dónde están el anfitrión y el visitante. drawSprites se llama entre el
+// decorado de fondo y el mobiliario en primer plano: así la barra tapa las piernas
+// del anfitrión, que queda detrás como un camarero tras su mostrador.
+export function drawInterior(g, id, W, H, time, drawSprites) {
   const cols = Math.min(11, Math.floor(W / 16)), rows = Math.min(8, Math.floor(H / 16));
   const rw = cols * 16, rh = rows * 16;
   const ox = Math.floor((W - rw) / 2), oy = Math.floor((H - rh) / 2);
@@ -41,8 +43,11 @@ export function drawInterior(g, id, W, H, time) {
 
   const flicker = Math.floor(time / 120) % 3;
   const room = { ox, oy, rw, rh, cx };
+  const pos = { host: { x: cx - 8, y: oy + 52 }, visitor: { x: cx - 8, y: oy + rh - 20 } };
   DECOR[id](g, room, flicker, time);
-  return { host: { x: cx - 8, y: oy + 52 }, visitor: { x: cx - 8, y: oy + rh - 20 } };
+  drawSprites?.(pos);
+  FOREGROUND[id]?.(g, room, flicker);
+  return pos;
 }
 
 const window_ = (g, x, y) => {
@@ -80,8 +85,6 @@ const DECOR = {
     });
     // Estandartes.
     for (const x of [ox + 8, ox + rw - 18]) { px(g, '#3446c2', x, oy + 6, 10, 24); px(g, '#ffd866', x + 3, oy + 14, 4, 4); px(g, '#3446c2', x + 2, oy + 30, 6, 3); }
-    counter(g, cx - 34, oy + 66, 68);
-    px(g, '#ffd866', cx + 18, oy + 62, 6, 4); // campanilla
   },
   academia(g, { ox, oy, rw, cx }) {
     // Estanterías con lomos de colores.
@@ -96,7 +99,6 @@ const DECOR = {
     // Pizarra.
     px(g, '#5a3a22', cx - 18, oy + 8, 36, 24); px(g, '#2b4a3a', cx - 16, oy + 10, 32, 20);
     px(g, '#e8e8f0', cx - 12, oy + 14, 14, 1); px(g, '#e8e8f0', cx - 12, oy + 18, 20, 1); px(g, '#e8e8f0', cx - 12, oy + 22, 10, 1);
-    counter(g, cx - 26, oy + 66, 52, '#5a3a22', '#4a2a18');
   },
   taller(g, { ox, oy, rw, cx }, flicker) {
     // Fragua con fuego.
@@ -126,6 +128,20 @@ const DECOR = {
     for (let i = 0; i < 4; i++) { px(g, '#c98a12', cx - 16 + i * 9, oy + 14, 6, 8); px(g, '#ffffff', cx - 16 + i * 9, oy + 14, 6, 2); }
     // Barriles.
     for (const [x, y] of [[ox + rw - 22, oy + 30], [ox + rw - 22, oy + 50]]) { px(g, '#7a4a28', x, y, 16, 18); px(g, '#3b2414', x, y + 4, 16, 2); px(g, '#3b2414', x, y + 12, 16, 2); }
+  },
+};
+
+// Mobiliario del primer plano: se dibuja después de los personajes para que la barra
+// tape sus piernas y el anfitrión quede detrás, tras su mostrador.
+const FOREGROUND = {
+  gremio(g, { cx, oy }) {
+    counter(g, cx - 34, oy + 66, 68);
+    px(g, '#ffd866', cx + 18, oy + 62, 6, 4); // campanilla
+  },
+  academia(g, { cx, oy }) {
+    counter(g, cx - 26, oy + 66, 52, '#5a3a22', '#4a2a18');
+  },
+  posada(g, { cx, oy }) {
     counter(g, cx - 30, oy + 66, 60);
     px(g, '#c98a12', cx - 20, oy + 61, 6, 6); px(g, '#ffffff', cx - 20, oy + 61, 6, 2);
   },
