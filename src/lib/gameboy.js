@@ -1,6 +1,7 @@
 // Modo Game Boy: se activa (y desactiva) con el código Konami ↑↑↓↓←→←→ B A.
 // La interfaz cambia a la paleta de 4 verdes y el pueblo se reduce a esos 4 tonos.
 import { track } from './analytics.js';
+import { isDev, DEV_PALETTE } from './devmode.js';
 
 const KEY = 'modo-gameboy';
 const CODE = ['up', 'up', 'down', 'down', 'left', 'right', 'left', 'right', 'b', 'a'];
@@ -14,9 +15,17 @@ const listeners = new Set();
 
 export const isGameBoy = () => document.documentElement.classList.contains('gameboy');
 
+// Cualquiera de los dos modos retro cuantiza el canvas a su paleta de 4 tonos.
+export const isRetro = () => isGameBoy() || isDev();
+
 function apply(on) {
   document.documentElement.classList.toggle('gameboy', on);
   try { localStorage.setItem(KEY, on ? '1' : '0'); } catch { /* sin almacenamiento */ }
+  // Solo una estética retro a la vez: el Konami retira el modo developer.
+  if (on) {
+    document.documentElement.classList.remove('developer');
+    try { localStorage.setItem('modo-developer', '0'); } catch { /* sin almacenamiento */ }
+  }
   listeners.forEach((fn) => fn(on));
 }
 
@@ -52,13 +61,15 @@ export function initGameBoy() {
   });
 }
 
-// Reduce una imagen de canvas a los 4 verdes según su luminosidad.
+// Reduce una imagen de canvas a los 4 tonos de la paleta retro activa,
+// según su luminosidad: la de Game Boy o la de fósforo verde del modo developer.
 export function quantize(ctx, w, h) {
   const img = ctx.getImageData(0, 0, w, h);
   const d = img.data;
+  const pal = isDev() ? DEV_PALETTE : GB_PALETTE;
   for (let i = 0; i < d.length; i += 4) {
     const l = 0.3 * d[i] + 0.59 * d[i + 1] + 0.11 * d[i + 2];
-    const c = GB_PALETTE[l < 60 ? 0 : l < 115 ? 1 : l < 175 ? 2 : 3];
+    const c = pal[l < 60 ? 0 : l < 115 ? 1 : l < 175 ? 2 : 3];
     d[i] = c[0]; d[i + 1] = c[1]; d[i + 2] = c[2];
   }
   ctx.putImageData(img, 0, 0);

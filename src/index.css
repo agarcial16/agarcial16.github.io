@@ -530,6 +530,63 @@ html.gameboy .console-led { background: #d22; box-shadow: 0 0 6px #d22; }
   animation: toast-in 240ms ease-out;
 }
 
+/* ===== Modo developer (escribe DEV) ===== */
+html.developer {
+  --night: #020a02; --win-top: #03140a; --win-mid: #02100a; --win-bot: #010b05;
+  --win-border: #28cc60; --win-edge: #020a02; --text: #8dffab; --muted: #3fae5e;
+  --gold: #35e06a; --green: #28cc60; --red: #8dffab; --chip: rgba(40, 204, 96, 0.12);
+  --shadow: 0 0 4px rgba(40, 204, 96, 0.35);
+  --font-pixel: 'Cascadia Code', 'Consolas', 'Courier New', monospace;
+  --font-body: 'Cascadia Code', 'Consolas', 'Courier New', monospace;
+}
+html.developer .stars { display: none; }
+html.developer img { filter: grayscale(1) sepia(1) hue-rotate(60deg) saturate(2.4) brightness(0.95); }
+html.developer .win {
+  border-radius: 0;
+  background: #010b05;
+  box-shadow: inset 0 0 18px rgba(40, 204, 96, 0.12);
+}
+html.developer .win-title { border-bottom: 1px solid rgba(40, 204, 96, 0.4); }
+html.developer a:hover, html.developer .btn:hover { color: #c6ffd4; background: rgba(40, 204, 96, 0.14); }
+html.developer .btn { border-radius: 0; }
+html.developer .btn-primary, html.developer .town-key { background: #28cc60; color: #021008; border-color: #8dffab; }
+html.developer .btn-primary:hover { background: #35e06a; color: #021008; }
+html.developer .bar-fill { background: #28cc60; }
+html.developer .town-prompt, html.developer .town-toast, html.developer .gb-toast { background: #02100a; border-color: #28cc60; color: #8dffab; }
+html.developer .town-sheet { background: rgba(1, 11, 5, 0.97); }
+html.developer .town-modal { background: rgba(1, 11, 5, 0.85); }
+html.developer .console-screen { box-shadow: inset 0 0 22px rgba(40, 204, 96, 0.15); }
+/* Scanlines sobre la pantalla del pueblo (cubre también diálogos y combates) */
+html.developer .town-frame::after {
+  content: ''; position: absolute; inset: 0; z-index: 6; pointer-events: none;
+  background: repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.22) 0 1px, transparent 1px 3px);
+}
+/* Diálogos como terminal: el texto sin teclear se oculta y parpadea un cursor al final */
+html.developer .dialog-ghost { display: none; }
+html.developer .town-dialog-text > span[aria-hidden]::after {
+  content: '▮'; margin-left: 2px;
+  animation: cursor-blink 0.9s steps(1) infinite;
+}
+html.developer .dialog-speaker::before { content: '~$ '; color: #35e06a; }
+@keyframes cursor-blink { 50% { opacity: 0; } }
+
+/* Falso arranque de terminal al activar el modo */
+.dev-boot {
+  position: fixed; inset: 0; z-index: 60; margin: 0; padding: 12vh 0 0 8vw;
+  background: #010b05; color: #8dffab;
+  font-family: 'Cascadia Code', 'Consolas', 'Courier New', monospace; font-size: 15px; line-height: 1.9;
+  animation: dev-boot-out 0.45s ease 1.9s forwards;
+}
+.dev-boot p { opacity: 0; animation: dev-line 0.01s steps(1) forwards; margin: 0; }
+.dev-boot p:last-child { color: #c6ffd4; }
+.dev-boot p:last-child::after { content: '▮'; animation: cursor-blink 0.9s steps(1) infinite; }
+@keyframes dev-line { to { opacity: 1; } }
+@keyframes dev-boot-out { to { opacity: 0; visibility: hidden; } }
+@media (prefers-reduced-motion: reduce) {
+  .dev-boot { animation: none; }
+  .dev-boot p { animation: none; opacity: 1; }
+}
+
 /* ===== Combate en la Cueva de los bugs ===== */
 .battle { position: absolute; inset: 0; z-index: 3; animation: battle-in 520ms steps(8); }
 @keyframes battle-in { 0%, 25%, 50%, 75% { filter: brightness(3) contrast(0.3); } 12%, 37%, 62%, 87% { filter: invert(1); } }

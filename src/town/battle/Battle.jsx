@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { HERO_STATS, SKILLS, BUG_SPRITE } from './data.js';
 import { buildSprites, ANGEL, ANGEL_SHAPE } from '../art.js';
 import { play, jingle } from '../sound.js';
-import { isGameBoy, quantize } from '../../lib/gameboy.js';
+import { isRetro, quantize } from '../../lib/gameboy.js';
 
 const reduceMotion = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 const rand = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
@@ -223,7 +223,7 @@ export default function Battle({ enemy, lang, T, width, height, scale, onEnd }) 
         g.fillStyle = p.color; g.fillText(p.text, px, py - k * 16);
       }
       g.globalAlpha = 1;
-      if (isGameBoy()) quantize(g, W, H);
+      if (isRetro()) quantize(g, W, H);
       raf = requestAnimationFrame(frame);
     };
     raf = requestAnimationFrame(frame);

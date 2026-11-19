@@ -16,7 +16,7 @@ const Interior = lazy(() => import('./Interior.jsx'));
 const CAVE_KEY = 'pueblo-cueva';
 const loadCave = () => { try { return JSON.parse(localStorage.getItem(CAVE_KEY) ?? '[]'); } catch { return []; } };
 import { track } from '../lib/analytics.js';
-import { feedKonami, isGameBoy, quantize } from '../lib/gameboy.js';
+import { feedKonami, isRetro, quantize } from '../lib/gameboy.js';
 
 const STEP_MS = 150;
 const BRIDGE_MS = 450;
@@ -459,7 +459,7 @@ export default function Town({ places, onMenu }) {
       drawSparkles(g, s.chestT0, now, camX, camY);
 
       if (fade > 0) { g.fillStyle = `rgba(5, 8, 38, ${fade.toFixed(3)})`; g.fillRect(0, 0, canvas.width, canvas.height); }
-      if (isGameBoy()) quantize(g, canvas.width, canvas.height);
+      if (isRetro()) quantize(g, canvas.width, canvas.height);
 
       // Indicación contextual (solo cambia el estado de React cuando cambia el texto).
       let p = null;

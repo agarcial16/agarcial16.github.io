@@ -4,10 +4,12 @@ import App from './App.jsx';
 import { I18nProvider } from './i18n/index.jsx';
 import { initAnalytics } from './lib/analytics.js';
 import { initGameBoy } from './lib/gameboy.js';
+import { initDevMode } from './lib/devmode.js';
 import './index.css';
 
 initAnalytics();
 initGameBoy();
+initDevMode();
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>

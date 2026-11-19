@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { drawInterior, HOSTS } from './interior.js';
 import { buildSprites, VISITOR } from './art.js';
 import { play } from './sound.js';
-import { isGameBoy, quantize } from '../lib/gameboy.js';
+import { isRetro, quantize } from '../lib/gameboy.js';
 
 const reduceMotion = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 
@@ -53,7 +53,7 @@ export default function Interior({ building, T, width, height, scale, catGone, o
       g.fillStyle = '#05060d'; g.fillRect(0, 0, canvas.width, canvas.height);
       g.imageSmoothingEnabled = false;
       g.drawImage(off, dx, 6, off.width * k, off.height * k);
-      if (isGameBoy()) quantize(g, canvas.width, canvas.height);
+      if (isRetro()) quantize(g, canvas.width, canvas.height);
       raf = requestAnimationFrame(frame);
     };
     raf = requestAnimationFrame(frame);
