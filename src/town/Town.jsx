@@ -186,8 +186,8 @@ export default function Town({ places, onMenu }) {
     setEnding(true);
     jingle('fanfare');
     track('partida-completada');
-    // La medalla cuenta los extras: el gato adoptado y la cueva limpia.
-    if (journalRef.current.done.includes('gato') && defeatedRef.current.length === ENEMIES.length) track('medalla-exploracion');
+    // La medalla cuenta los extras: el gato adoptado, el arma forjada y la cueva limpia.
+    if (journalRef.current.done.includes('gato') && journalRef.current.done.includes('forja') && defeatedRef.current.length === ENEMIES.length) track('medalla-exploracion');
   }, [dialog, place, journal]);
 
   const resetJournal = () => {
@@ -205,7 +205,7 @@ export default function Town({ places, onMenu }) {
     setJournal(fresh);
   };
 
-  const objectiveLabel = (id) => (id === 'cv' ? T.journal.cv : id === 'cave' ? T.battle.extra : id === 'gato' ? T.journal.cat : T.journal.visit(T.buildings[id].name));
+  const objectiveLabel = (id) => (id === 'cv' ? T.journal.cv : id === 'cave' ? T.battle.extra : id === 'gato' ? T.journal.cat : id === 'forja' ? T.journal.forge : T.journal.visit(T.buildings[id].name));
 
   const game = useRef({
     x: START.x, y: START.y, dir: START.dir, from: null, t: 0, step: 0,
@@ -589,6 +589,8 @@ export default function Town({ places, onMenu }) {
                   building={interior} T={T} width={vp.w} height={vp.h} scale={vp.scale}
                   catGone={journal.done.includes('gato')}
                   onPetCat={() => { complete('gato'); track('gato-adoptado'); }}
+                  forged={journal.done.includes('forja')}
+                  onForgeDone={() => { complete('forja'); track('forja-completada'); }}
                   onView={() => { setInterior(null); setPlace(interior); }}
                   onExit={() => { setInterior(null); leave(); }}
                 />
@@ -596,7 +598,7 @@ export default function Town({ places, onMenu }) {
             )}
             {battle && (
               <Suspense fallback={null}>
-                <Battle key={battle.id} enemy={battle} lang={lang} T={T} width={vp.w} height={vp.h} scale={vp.scale} onEnd={endBattle} />
+                <Battle key={battle.id} enemy={battle} lang={lang} T={T} width={vp.w} height={vp.h} scale={vp.scale} forged={journal.done.includes('forja')} onEnd={endBattle} />
               </Suspense>
             )}
           </div>
@@ -632,13 +634,14 @@ export default function Town({ places, onMenu }) {
       {showJournal && (
         <Journal
           T={T} journal={journal} label={objectiveLabel} cave={defeated.length}
-          cat={journal.done.includes('gato')} onReset={resetJournal} onClose={closeJournal}
+          cat={journal.done.includes('gato')} forge={journal.done.includes('forja')}
+          onReset={resetJournal} onClose={closeJournal}
         />
       )}
       {ending && (
         <Ending
           T={T} t={t} profile={profile} onClose={closeEnding}
-          medal={journal.done.includes('gato') && defeated.length === ENEMIES.length}
+          medal={journal.done.includes('gato') && journal.done.includes('forja') && defeated.length === ENEMIES.length}
         />
       )}
     </div>
@@ -711,7 +714,7 @@ function PlaceSheet({ title, hint, exit, Panel, onClose }) {
   );
 }
 
-function Journal({ T, journal, label, cave, cat, onReset, onClose }) {
+function Journal({ T, journal, label, cave, cat, forge, onReset, onClose }) {
   const closeRef = useRef(null);
   useModalKeys(onClose, closeRef);
   const J = T.journal;
@@ -736,6 +739,10 @@ function Journal({ T, journal, label, cave, cat, onReset, onClose }) {
           <li className={`journal-extra ${cat ? 'is-done' : ''}`}>
             <span className="journal-mark" aria-hidden="true">🐾</span>
             <span>{J.catExtra}</span>
+          </li>
+          <li className={`journal-extra ${forge ? 'is-done' : ''}`}>
+            <span className="journal-mark" aria-hidden="true">⚒</span>
+            <span>{J.forgeExtra}</span>
           </li>
           <li className={`journal-extra ${cave === ENEMIES.length ? 'is-done' : ''}`}>
             <span className="journal-mark" aria-hidden="true">★</span>

@@ -17,9 +17,12 @@ function bugCanvas(pal) {
 }
 
 // Combate por turnos contra un bug. onEnd recibe 'win', 'lose' o 'run'.
-export default function Battle({ enemy, lang, T, width, height, scale, onEnd }) {
+// forged indica que el visitante forjó el «Refactor total» en el taller.
+export default function Battle({ enemy, lang, T, width, height, scale, forged, onEnd }) {
   const B = T.battle;
   const foe = enemy[lang];
+  // Sin forja no hay quinta habilidad: el arsenal la esconde.
+  const skills = forged ? SKILLS : SKILLS.filter((s) => s.id !== 'refactor');
   const canvasRef = useRef(null);
   const fx = useRef({ pops: [], t0: performance.now() });
   const [hp, setHp] = useState(HERO_STATS.hp);
@@ -107,7 +110,8 @@ export default function Battle({ enemy, lang, T, width, height, scale, onEnd }) 
       setMp((m) => m - skill.mp);
       play('skill');
       await say(B.uses(skill[lang].name), 700);
-      const weak = enemy.weak === skill.id;
+      // El «Refactor total» es el punto débil del jefe: le reescribe el código de raíz.
+      const weak = enemy.weak === skill.id || (enemy.boss && skill.id === 'refactor');
       const dmg = (skill.power + rand(0, 3)) * (weak ? 2 : 1);
       await hitEnemy(dmg, skill.color, weak);
     } else if (kind === 'item') {
@@ -269,7 +273,7 @@ export default function Battle({ enemy, lang, T, width, height, scale, onEnd }) 
         {mode === 'skills' && (
           <>
             <div className="battle-cmds">
-              {SKILLS.map((s) => (
+              {skills.map((s) => (
                 <button key={s.id} type="button" className="menu-item" disabled={mp < s.mp}
                   onFocus={() => setInfo(s[lang].info)} onMouseEnter={() => setInfo(s[lang].info)}
                   onClick={() => act('skill', s)}>

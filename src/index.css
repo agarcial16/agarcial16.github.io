@@ -621,3 +621,20 @@ html.developer .dialog-speaker::before { content: '~$ '; color: #35e06a; }
 
 /* ===== Interiores ===== */
 .interior { position: absolute; inset: 0; z-index: 3; animation: panel-in 260ms ease-out; }
+
+/* ===== Minijuego de la forja ===== */
+.forge-bar { position: relative; height: 28px; margin: 12px 0 6px; background: #1a1230; border: 3px solid var(--win-border); border-radius: 4px; overflow: hidden; }
+.forge-zone {
+  position: absolute; top: 0; bottom: 0; left: 50%; transform: translateX(-50%); width: 20%;
+  background: rgba(255, 216, 102, 0.3);
+  border-left: 2px solid var(--gold); border-right: 2px solid var(--gold);
+}
+.forge-bar.hit .forge-zone { background: rgba(134, 245, 166, 0.55); }
+.forge-bar.miss { animation: forge-shake 240ms linear; }
+@keyframes forge-shake { 25% { transform: translateX(-3px); } 75% { transform: translateX(3px); } }
+.forge-marker {
+  position: absolute; top: 50%; left: 15%; transform: translate(-50%, -50%);
+  font-size: 18px; line-height: 1; pointer-events: none;
+  filter: drop-shadow(0 1px 0 #05060d);
+}
+.forge-status { min-height: 1.6em; margin: 0; }

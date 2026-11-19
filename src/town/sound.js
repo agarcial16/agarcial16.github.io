@@ -72,6 +72,7 @@ const SYNTH = {
   bump: { type: 'square', from: 140, to: 70, dur: 0.08, vol: 0.18 },
   hit: { type: 'square', from: 320, to: 60, dur: 0.14, vol: 0.2 },
   crit: { type: 'sawtooth', from: 900, to: 90, dur: 0.22, vol: 0.18 },
+  clang: { type: 'square', from: 1250, to: 190, dur: 0.22, vol: 0.22 },
   skill: { type: 'square', from: 500, to: 1400, dur: 0.16, vol: 0.12 },
   heal: { type: 'triangle', from: 500, to: 1200, dur: 0.3, vol: 0.35 },
   meow: { type: 'sawtooth', from: 460, to: 880, dur: 0.24, vol: 0.12 },

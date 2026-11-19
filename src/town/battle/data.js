@@ -24,6 +24,11 @@ export const SKILLS = [
     es: { name: 'Equipo de agentes', info: 'Orquestador, planner, implementer y reviewer trabajando en cadena. Fuerte contra todo, pero gasta mucho PM.' },
     en: { name: 'Agent squad', info: 'Orchestrator, planner, implementer and reviewer working as one. Strong against anything, but costly in MP.' },
   },
+  {
+    id: 'refactor', mp: 10, power: 14, color: '#ffd866',
+    es: { name: 'Refactor total', info: 'Forjada con el bug del yunque del taller. Reescribe el código de raíz: devastadora contra el bug en producción.' },
+    en: { name: 'Total refactor', info: 'Forged from the anvil bug at the blacksmith’s. It rewrites code from the root: devastating against the production bug.' },
+  },
 ];
 
 export const ENEMIES = [

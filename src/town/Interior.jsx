@@ -20,11 +20,13 @@ const dayRumor = (pool, guestIdx) => pool[(Math.floor(Date.now() / 86_400_000) +
 // Sala de un edificio: el anfitrión saluda y ofrece ver la sección del CV o volver al pueblo.
 // En Mi casa se puede acariciar al gato de la cama: despierta y se une al visitante.
 // En la posada, los viajeros de las mesas cuentan rumores sobre Ángel.
-export default function Interior({ building, T, width, height, scale, catGone, onPetCat, onView, onExit }) {
+// En el taller, un bug incrustado en el yunque se extrae a martillazos con timing.
+export default function Interior({ building, T, width, height, scale, catGone, forged, onPetCat, onForgeDone, onView, onExit }) {
   const canvasRef = useRef(null);
   const text = T.interior[building.id];
   const isCat = building.id === 'casa';
   const isInn = building.id === 'posada';
+  const isForge = building.id === 'taller';
   const guests = isInn ? T.interior.guests : null;
   // La mercader duerme sobre la mesa de noche; el bardo nunca para de contar historias.
   const night = dayPhase() === 'night';
@@ -32,10 +34,18 @@ export default function Interior({ building, T, width, height, scale, catGone, o
   // La última línea se fija al entrar: si el gato se une ahora, se ve despertarse
   // (la cama ya se redibuja vacía); en visitas posteriores, la cama ya está deshecha.
   const [catJoined] = useState(catGone);
-  const baseLines = isCat ? [...text.lines, catJoined ? T.interior.catOut : T.interior.catWake] : text.lines;
-  const lines = guest === null ? baseLines
-    : [night && guest === 1 ? guests[guest].sleep : dayRumor(guests[guest].talk, guest)];
-  const speaker = guest === null ? text.speaker : guests[guest].name;
+  const [forge, setForge] = useState(false); // minijuego del yunque en marcha
+  const [reward, setReward] = useState(false); // el herrero entrega el arma recién forjada
+  const strikeRef = useRef(null);
+  const baseLines = isCat
+    ? [...text.lines, catJoined ? T.interior.catOut : T.interior.catWake]
+    : isForge
+      ? [...text.lines, forged ? T.interior.forgeDone : T.interior.forgeIntro]
+      : text.lines;
+  const lines = reward ? T.interior.forgeWin
+    : guest === null ? baseLines
+      : [night && guest === 1 ? guests[guest].sleep : dayRumor(guests[guest].talk, guest)];
+  const speaker = guest !== null ? guests[guest].name : text.speaker;
   const [i, setI] = useState(0);
   const [shown, setShown] = useState(() => (reduceMotion() ? Infinity : 0));
   const line = lines[i];
@@ -55,6 +65,16 @@ export default function Interior({ building, T, width, height, scale, catGone, o
     setGuest(idx);
     setI(0);
     setShown(reduceMotion() ? Infinity : 0);
+  };
+  const startForge = () => { play('select'); setForge(true); };
+  const cancelForge = () => { play('select'); setForge(false); };
+  const winForge = () => {
+    setForge(false);
+    setReward(true);
+    setI(0);
+    setShown(reduceMotion() ? Infinity : 0);
+    play('item');
+    onForgeDone?.();
   };
   const viewRef = useRef(null);
 
@@ -109,13 +129,22 @@ export default function Interior({ building, T, width, height, scale, catGone, o
   };
 
   // Enter/A avanza o entra en la sección; Esc/B vuelve al pueblo.
+  // Si el minijuego de la forja está en marcha, Enter golpea y Esc lo abandona.
   useEffect(() => {
     const key = (e) => {
       if (e.repeat) return;
+      if (forge) {
+        if (e.key === 'Escape') { e.preventDefault(); e.stopImmediatePropagation(); cancelForge(); }
+        else if ((e.key === 'Enter' || e.key === ' ') && !e.target.closest?.('button')) { e.preventDefault(); e.stopImmediatePropagation(); strikeRef.current?.(); }
+        return;
+      }
       if (e.key === 'Escape') { e.preventDefault(); e.stopImmediatePropagation(); onExit(); }
       else if ((e.key === 'Enter' || e.key === ' ') && !e.target.closest?.('button')) { e.preventDefault(); e.stopImmediatePropagation(); if (last && !typing) onView(); else advance(); }
     };
-    const pad = (e) => { if (e.detail === 'b') onExit(); else if (e.detail === 'a') { if (last && !typing) onView(); else advance(); } };
+    const pad = (e) => {
+      if (forge) { if (e.detail === 'b') cancelForge(); else if (e.detail === 'a') strikeRef.current?.(); return; }
+      if (e.detail === 'b') onExit(); else if (e.detail === 'a') { if (last && !typing) onView(); else advance(); }
+    };
     window.addEventListener('keydown', key, true);
     window.addEventListener('battle-input', pad);
     return () => { window.removeEventListener('keydown', key, true); window.removeEventListener('battle-input', pad); };
@@ -124,29 +153,112 @@ export default function Interior({ building, T, width, height, scale, catGone, o
   return (
     <div className="interior" role="dialog" aria-modal="true" aria-label={T.buildings[building.id].name}>
       <canvas ref={canvasRef} className="town-canvas" width={width} height={height} style={{ width: width * scale, height: height * scale }} aria-hidden="true" />
-      <div className="win town-dialog">
-        <span className="dialog-speaker">{speaker}</span>
-        <p className="town-dialog-text" onClick={advance}>
-          <span className="sr-only" aria-live="polite">{line}</span>
-          <span aria-hidden="true">{line.slice(0, shown)}<span className="dialog-ghost">{line.slice(shown)}</span></span>
-        </p>
-        <div className="town-dialog-actions">
-          {canPet ? (
-            <button type="button" className="btn btn-primary" onClick={pet}>🐾 {T.interior.pet}</button>
-          ) : last && !typing ? (
-            <>
-              {guests && guests.map((gu, idx) => (
-                <button key={gu.name} type="button" className="btn" onClick={() => talkTo(idx)}>
-                  {night && idx === 1 ? '💤' : gu.mark} {T.interior.talk(gu.name)}
-                </button>
-              ))}
-              <button type="button" className="btn" onClick={onExit}>{T.exit}</button>
-              <button ref={viewRef} type="button" className="btn btn-primary" onClick={onView}>{T.interior.view(T.buildings[building.id].hint)}</button>
-            </>
-          ) : (
-            <button type="button" className="btn" onClick={advance}>{typing ? T.skip : T.next}</button>
-          )}
+      {forge ? (
+        <ForgeGame T={T} strikeRef={strikeRef} onWin={winForge} onCancel={cancelForge} />
+      ) : (
+        <div className="win town-dialog">
+          <span className="dialog-speaker">{speaker}</span>
+          <p className="town-dialog-text" onClick={advance}>
+            <span className="sr-only" aria-live="polite">{line}</span>
+            <span aria-hidden="true">{line.slice(0, shown)}<span className="dialog-ghost">{line.slice(shown)}</span></span>
+          </p>
+          <div className="town-dialog-actions">
+            {canPet ? (
+              <button type="button" className="btn btn-primary" onClick={pet}>🐾 {T.interior.pet}</button>
+            ) : last && !typing ? (
+              <>
+                {guests && guests.map((gu, idx) => (
+                  <button key={gu.name} type="button" className="btn" onClick={() => talkTo(idx)}>
+                    {night && idx === 1 ? '💤' : gu.mark} {T.interior.talk(gu.name)}
+                  </button>
+                ))}
+                {isForge && !forged && !reward && (
+                  <button type="button" className="btn" onClick={startForge}>🔨 {T.interior.forgeButton}</button>
+                )}
+                <button type="button" className="btn" onClick={onExit}>{T.exit}</button>
+                <button ref={viewRef} type="button" className="btn btn-primary" onClick={onView}>{T.interior.view(T.buildings[building.id].hint)}</button>
+              </>
+            ) : (
+              <button type="button" className="btn" onClick={advance}>{typing ? T.skip : T.next}</button>
+            )}
+          </div>
         </div>
+      )}
+    </div>
+  );
+}
+
+// Minijuego de la forja: el martillo oscila de un lado a otro de la barra y hay que
+// golpear (Enter, A o el botón) cuando cruza la zona dorada. Tres aciertos lo extraen;
+// un fallo devuelve un golpe y relaja un poco el ritmo. Sin castigo: es amable.
+const FORGE_NEED = 3;
+function ForgeGame({ T, strikeRef, onWin, onCancel }) {
+  const [hits, setHits] = useState(0);
+  const [msg, setMsg] = useState('');
+  const [flash, setFlash] = useState(null); // 'hit' | 'miss'
+  const zone = useRef(0.1); // semiancho de la zona dorada
+  const speed = useRef(0.0011); // posición por milisegundo
+  const pos = useRef(0.15);
+  const dir = useRef(1);
+  const markerRef = useRef(null);
+  const zoneRef = useRef(null);
+  const hitsRef = useRef(0);
+  const doneRef = useRef(false);
+
+  useEffect(() => {
+    let raf, lastT = performance.now();
+    const frame = (now) => {
+      const dt = Math.min(50, now - lastT); lastT = now;
+      pos.current += dir.current * speed.current * dt;
+      if (pos.current >= 1) { pos.current = 1; dir.current = -1; }
+      else if (pos.current <= 0) { pos.current = 0; dir.current = 1; }
+      if (markerRef.current) markerRef.current.style.left = `${(pos.current * 100).toFixed(2)}%`;
+      raf = requestAnimationFrame(frame);
+    };
+    raf = requestAnimationFrame(frame);
+    return () => cancelAnimationFrame(raf);
+  }, []);
+
+  const strike = () => {
+    if (doneRef.current) return;
+    if (Math.abs(pos.current - 0.5) <= zone.current) {
+      play('clang');
+      setFlash('hit');
+      setMsg(`${T.interior.forgeHit} ${T.interior.forgeHits(hitsRef.current + 1, FORGE_NEED)}`);
+      hitsRef.current += 1;
+      setHits(hitsRef.current);
+      if (hitsRef.current >= FORGE_NEED) {
+        doneRef.current = true;
+        setTimeout(onWin, 700);
+        return;
+      }
+      zone.current *= 0.78;
+      speed.current *= 1.25;
+      if (zoneRef.current) zoneRef.current.style.width = `${zone.current * 200}%`;
+    } else {
+      play('bump');
+      setFlash('miss');
+      setMsg(`${T.interior.forgeMiss} ${T.interior.forgeHits(Math.max(0, hitsRef.current - 1), FORGE_NEED)}`);
+      hitsRef.current = Math.max(0, hitsRef.current - 1);
+      setHits(hitsRef.current);
+      speed.current = Math.max(0.0011, speed.current * 0.85);
+    }
+    setTimeout(() => setFlash(null), 300);
+  };
+  useEffect(() => { strikeRef.current = strike; });
+
+  return (
+    <div className="win town-dialog forge-box">
+      <span className="dialog-speaker">🔨 {T.interior.forgeTitle}</span>
+      <p className="small muted">{T.interior.forgeHint}</p>
+      <div className={`forge-bar ${flash ?? ''}`}>
+        <span ref={zoneRef} className="forge-zone" />
+        <span ref={markerRef} className="forge-marker" aria-hidden="true">🔨</span>
+      </div>
+      <p className="small forge-status" role="status">{msg || T.interior.forgeHits(0, FORGE_NEED)}</p>
+      <div className="town-dialog-actions">
+        <button type="button" className="btn btn-primary" onClick={strike}>{T.interior.forgeStrike} · {hits}/{FORGE_NEED}</button>
+        <button type="button" className="btn" onClick={onCancel}>{T.exit}</button>
       </div>
     </div>
   );
