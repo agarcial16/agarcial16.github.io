@@ -44,11 +44,29 @@ export function drawInterior(g, id, W, H, time, drawSprites, opts = {}) {
 
   const flicker = Math.floor(time / 120) % 3;
   const room = { ox, oy, rw, rh, cx };
-  const pos = { host: { x: cx - 8, y: oy + 52 }, visitor: { x: cx - 8, y: oy + rh - 20 } };
+  // Los viajeros de la posada se sientan tras las mesas laterales (tapan sus piernas).
+  const pos = {
+    host: { x: cx - 8, y: oy + 52 },
+    visitor: { x: cx - 8, y: oy + rh - 20 },
+    guests: id === 'posada' ? [{ x: ox + 17, y: oy + 52 }, { x: ox + rw - 47, y: oy + 52 }] : [],
+  };
   DECOR[id](g, room, flicker, time, opts);
   drawSprites?.(pos);
   FOREGROUND[id]?.(g, room, flicker);
   return pos;
+}
+
+// Zzz de un viajero dormido: tres zeds que suben y se desvanecen.
+export function drawZzz(g, x, y, time) {
+  for (let i = 0; i < 3; i++) {
+    const k = (time / 1400 + i / 3) % 1;
+    const zx = Math.round(x + i * 4 + k * 2);
+    const zy = Math.round(y - k * 12);
+    g.fillStyle = `rgba(232, 232, 240, ${(0.8 * (1 - k)).toFixed(2)})`;
+    g.fillRect(zx, zy, 3, 1);
+    g.fillRect(zx + 2 - Math.round(k * 2), zy + 1, 1, 1);
+    g.fillRect(zx, zy + 2, 3, 1);
+  }
 }
 
 const window_ = (g, x, y) => {
@@ -138,6 +156,13 @@ const DECOR = {
 
 // Mobiliario del primer plano: se dibuja después de los personajes para que la barra
 // tape sus piernas y el anfitrión quede detrás, tras su mostrador.
+const table = (g, x, y, w) => {
+  px(g, '#2a1a10', x - 1, y - 1, w + 2, 12);
+  px(g, '#8a5a2b', x, y, w, 4);
+  px(g, '#6b4226', x, y + 4, w, 6);
+  for (let i = x + 5; i < x + w; i += 10) px(g, '#4a2a18', i, y + 5, 1, 4);
+};
+
 const FOREGROUND = {
   gremio(g, { cx, oy }) {
     counter(g, cx - 34, oy + 66, 68);
@@ -146,8 +171,13 @@ const FOREGROUND = {
   academia(g, { cx, oy }) {
     counter(g, cx - 26, oy + 66, 52, '#5a3a22', '#4a2a18');
   },
-  posada(g, { cx, oy }) {
+  posada(g, { ox, oy, cx, rw }) {
     counter(g, cx - 30, oy + 66, 60);
     px(g, '#c98a12', cx - 20, oy + 61, 6, 6); px(g, '#ffffff', cx - 20, oy + 61, 6, 2);
+    // Mesas de los viajeros: tapan sus piernas para que parezcan sentados.
+    table(g, ox + 8, oy + 66, 34);
+    table(g, ox + rw - 55, oy + 66, 32);
+    px(g, '#c98a12', ox + 20, oy + 61, 6, 6); px(g, '#ffffff', ox + 20, oy + 61, 6, 2);
+    px(g, '#c98a12', ox + rw - 45, oy + 61, 6, 6); px(g, '#ffffff', ox + rw - 45, oy + 61, 6, 2);
   },
 };

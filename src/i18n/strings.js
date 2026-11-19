@@ -99,7 +99,42 @@ export const STRINGS = {
         gremio: { speaker: 'Maestra del gremio', lines: ['¡Bienvenido al gremio de aventureros!', 'Aquí guardamos el registro de misiones de Ángel: su experiencia en DocPath y los proyectos en los que ha participado.'] },
         academia: { speaker: 'Rector', lines: ['Bienvenido a la academia. Aquí se formó Ángel.', 'Grado en Ingeniería Informática y, ahora, el máster en la UCLM. Y algo de inglés, claro.'] },
         taller: { speaker: 'Herrero', lines: ['¡Cuidado con la fragua, que quema!', 'Aquí se forjan las herramientas de Ángel: Cypress, Jenkins, Gatling, Java… Echa un vistazo al arsenal.'] },
-        posada: { speaker: 'Posadera', lines: ['¡Bienvenido a la posada! ¿Algo de beber?', '¿Buscas a Ángel para tu equipo? Te dejo cómo contactar con él… y su CV, por si quieres llevártelo.'] },
+        posada: {
+          speaker: 'Posadera',
+          lines: [
+            '¡Bienvenido a la posada! ¿Algo de beber?',
+            '¿Buscas a Ángel para tu equipo? Te dejo cómo contactar con él… y su CV, por si quieres llevártelo.',
+            'Ah, y habla con los viajeros de las mesas: siempre traen rumores frescos sobre Ángel.',
+          ],
+        },
+        guests: [
+          {
+            name: 'El bardo',
+          mark: '🎵',
+          talk: [
+            'Cuentan que Ángel convirtió las pruebas en historias: cien escenarios BDD que hasta un bardo sabe leer.',
+            'Dicen que aprendió Cypress, Gatling y BDD… ¡a la vez que ya estaba trabajando! Ese no le tiene miedo a nada.',
+            'Le oí contar que liberó a su equipo de horas y horas de ejecutar pruebas a mano. Ahora corren solas, y en paralelo.',
+            'Tiene ojo de halcón: los fallos que otros ven en producción, él los caza cuando aún son críos.',
+            'Se explica tan bien que su equipo siempre sabe cómo van las pruebas. Un bardo técnico, como yo.',
+            'Le llaman «el desatascador»: donde algo se atasca, ahí aparece él con la llave correcta.',
+          ],
+        },
+        {
+          name: 'La mercader',
+          mark: '🍺',
+          sleep: 'Zzz… zzz… (la mercader sueña con desplieges de viernes; mejor no despertarla)',
+          talk: [
+            'Si buscas mercancía: Ángel está abierto a nuevas misiones. Pregunta sin compromiso.',
+            'Su taller está en Valdepeñas, en Ciudad Real. Tierra de buen vino, por cierto.',
+            'Habla español nativo e inglés B1 con certificado. Suficiente para comerciar con cualquier gremio extranjero.',
+            'Para tratos rápidos: su correo es agarcial0708@gmail.com, y sus obras están en GitHub, como agarcial16.',
+            'Sigue ampliando su arsenal: un máster en Ingeniería Informática en la UCLM, ahora mismo en curso.',
+            'Su última mercancía es de lujo: orquesta agentes de IA guiándose por especificaciones. La nueva moda entre gremios.',
+          ],
+        },
+        ],
+        talk: (name) => `Hablar con ${name}`,
       },
       battle: {
         appears: (name, boss) => (boss ? `¡El ${name} te corta el paso!` : `¡Aparece un ${name} salvaje!`),
@@ -247,7 +282,42 @@ export const STRINGS = {
         gremio: { speaker: 'Guild master', lines: ['Welcome to the Adventurers’ Guild!', 'We keep Ángel’s quest log here: his experience at DocPath and the projects he has worked on.'] },
         academia: { speaker: 'Rector', lines: ['Welcome to the academy. This is where Ángel studied.', 'A bachelor’s in Computer Engineering and now the master’s at UCLM. Plus some English, of course.'] },
         taller: { speaker: 'Blacksmith', lines: ['Mind the forge, it’s hot!', 'Ángel’s tools are forged here: Cypress, Jenkins, Gatling, Java… Take a look at the arsenal.'] },
-        posada: { speaker: 'Innkeeper', lines: ['Welcome to the inn! Something to drink?', 'Looking for Ángel to join your party? Here’s how to reach him… and his CV, if you want to take it with you.'] },
+        posada: {
+          speaker: 'Innkeeper',
+          lines: [
+            'Welcome to the inn! Something to drink?',
+            'Looking for Ángel to join your party? Here’s how to reach him… and his CV, if you want to take it with you.',
+            'Oh, and chat with the travelers at the tables: they always bring fresh rumors about Ángel.',
+          ],
+        },
+        guests: [
+          {
+            name: 'The bard',
+          mark: '🎵',
+          talk: [
+            'They say Ángel turned tests into stories: a hundred BDD scenarios even a bard can read.',
+            'I hear he picked up Cypress, Gatling and BDD while already working the job. Nothing scares that one.',
+            'He once told me he freed his team from hours and hours of running tests by hand. Now they run on their own, in parallel.',
+            'Eyes of a hawk: the failures others meet in production, he catches while they’re still children.',
+            'He explains things so clearly his team always knows how the tests are going. A tech bard, like me.',
+            'They call him «the unclogger»: wherever something jams, there he is with the right key.',
+          ],
+        },
+        {
+          name: 'The merchant',
+          mark: '🍺',
+          sleep: 'Zzz… zzz… (the merchant dreams of Friday deploys; better not wake her)',
+          talk: [
+            'If you’re shopping: Ángel is open to new quests. Ask, no strings attached.',
+            'His workshop is in Valdepeñas, in Ciudad Real. Fine wine country, by the way.',
+            'He speaks native Spanish and B1-certified English. Enough to trade with any foreign guild.',
+            'For quick deals: his email is agarcial0708@gmail.com, and his wares are on GitHub as agarcial16.',
+            'He keeps expanding his arsenal: a master’s in Computer Engineering at UCLM, in progress as we speak.',
+            'His latest goods are fancy stuff: he orchestrates AI agents guided by specs. All the rage among guilds.',
+          ],
+        },
+        ],
+        talk: (name) => `Talk to ${name}`,
       },
       battle: {
         appears: (name, boss) => (boss ? `The ${name} blocks your way!` : `A wild ${name} appears!`),
