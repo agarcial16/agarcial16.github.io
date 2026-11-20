@@ -1,5 +1,7 @@
 // Estadísticas de visitas con GoatCounter: sin cookies y sin datos personales.
 // Se activa al rellenar CODE con el código de la cuenta (https://<CODE>.goatcounter.com).
+// Se llama «visitas» y no «analytics» a propósito: los bloqueadores de anuncios
+// confunden ese nombre de archivo con un rastreador y rompen la carga de la app.
 const CODE = 'agarcial16';
 
 const enabled = () => CODE && !['localhost', '127.0.0.1'].includes(window.location.hostname);

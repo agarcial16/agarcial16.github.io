@@ -15,7 +15,7 @@ const Battle = lazy(() => import('./battle/Battle.jsx'));
 const Interior = lazy(() => import('./Interior.jsx'));
 const CAVE_KEY = 'pueblo-cueva';
 const loadCave = () => { try { return JSON.parse(localStorage.getItem(CAVE_KEY) ?? '[]'); } catch { return []; } };
-import { track } from '../lib/analytics.js';
+import { track } from '../lib/visitas.js';
 import { feedKonami, isRetro, quantize } from '../lib/gameboy.js';
 
 const STEP_MS = 150;

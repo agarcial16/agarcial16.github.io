@@ -1,6 +1,6 @@
 // Modo Game Boy: se activa (y desactiva) con el código Konami ↑↑↓↓←→←→ B A.
 // La interfaz cambia a la paleta de 4 verdes y el pueblo se reduce a esos 4 tonos.
-import { track } from './analytics.js';
+import { track } from './visitas.js';
 import { isDev, DEV_PALETTE } from './devmode.js';
 
 const KEY = 'modo-gameboy';

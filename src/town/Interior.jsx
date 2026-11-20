@@ -4,7 +4,7 @@ import { buildSprites, VISITOR, HERO } from './artSkin.js';
 import { play } from './sound.js';
 import { dayPhase } from './effects.js';
 import { isRetro, quantize } from '../lib/gameboy.js';
-import { track } from '../lib/analytics.js';
+import { track } from '../lib/visitas.js';
 
 const reduceMotion = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 

@@ -2,7 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App.jsx';
 import { I18nProvider } from './i18n/index.jsx';
-import { initAnalytics } from './lib/analytics.js';
+import { initAnalytics } from './lib/visitas.js';
 import { initGameBoy } from './lib/gameboy.js';
 import { initDevMode } from './lib/devmode.js';
 import './index.css';

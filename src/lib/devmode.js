@@ -2,7 +2,7 @@
 // Toda la web pasa a una estética de terminal: fósforo verde, tipografía
 // monoespaciada, scanlines y diálogos con cursor parpadeante. Igual que el
 // modo Game Boy, queda guardado en el navegador y solo hay uno activo.
-import { track } from './analytics.js';
+import { track } from './visitas.js';
 
 const KEY = 'modo-developer';
 
