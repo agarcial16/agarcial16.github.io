@@ -189,17 +189,25 @@ export default function Interior({ building, T, width, height, scale, catGone, f
 }
 
 // Minijuego de la forja: el martillo oscila de un lado a otro de la barra y hay que
-// golpear (Enter, A o el botón) cuando cruza la zona dorada. Tres aciertos lo extraen;
-// un fallo devuelve un golpe y relaja un poco el ritmo. Sin castigo: es amable.
+// golpear (Enter, A o el botón) cuando cruza la zona dorada. Tres aciertos lo extraen.
+// Zona y velocidad dependen solo de los golpes llevados: fallar retrocede un golpe
+// y devuelve la dificultad del nivel anterior. Y si el martillo estuvo en la zona
+// hace menos de FORGE_GRACE ms, el golpe cuenta: se evalúa cuándo pulsó el jugador,
+// no cuándo procesó el navegador el clic o la tecla.
 const FORGE_NEED = 3;
+const FORGE_GRACE = 60;
+const zoneOf = (h) => 0.1 * 0.82 ** h; // semiancho de la zona por golpes llevados
+const speedOf = (h) => 0.0011 * 1.2 ** h; // posición por milisegundo
+
 function ForgeGame({ T, strikeRef, onWin, onCancel }) {
   const [hits, setHits] = useState(0);
   const [msg, setMsg] = useState('');
   const [flash, setFlash] = useState(null); // 'hit' | 'miss'
-  const zone = useRef(0.1); // semiancho de la zona dorada
-  const speed = useRef(0.0011); // posición por milisegundo
+  const zone = useRef(zoneOf(0));
+  const speed = useRef(speedOf(0));
   const pos = useRef(0.15);
   const dir = useRef(1);
+  const lastInZone = useRef(0);
   const markerRef = useRef(null);
   const zoneRef = useRef(null);
   const hitsRef = useRef(0);
@@ -212,6 +220,7 @@ function ForgeGame({ T, strikeRef, onWin, onCancel }) {
       pos.current += dir.current * speed.current * dt;
       if (pos.current >= 1) { pos.current = 1; dir.current = -1; }
       else if (pos.current <= 0) { pos.current = 0; dir.current = 1; }
+      if (Math.abs(pos.current - 0.5) <= zone.current) lastInZone.current = now;
       if (markerRef.current) markerRef.current.style.left = `${(pos.current * 100).toFixed(2)}%`;
       raf = requestAnimationFrame(frame);
     };
@@ -221,27 +230,26 @@ function ForgeGame({ T, strikeRef, onWin, onCancel }) {
 
   const strike = () => {
     if (doneRef.current) return;
-    if (Math.abs(pos.current - 0.5) <= zone.current) {
+    const inZone = Math.abs(pos.current - 0.5) <= zone.current;
+    if (inZone || performance.now() - lastInZone.current < FORGE_GRACE) {
       play('clang');
       setFlash('hit');
-      setMsg(`${T.interior.forgeHit} ${T.interior.forgeHits(hitsRef.current + 1, FORGE_NEED)}`);
       hitsRef.current += 1;
-      setHits(hitsRef.current);
-      if (hitsRef.current >= FORGE_NEED) {
-        doneRef.current = true;
-        setTimeout(onWin, 700);
-        return;
-      }
-      zone.current *= 0.78;
-      speed.current *= 1.25;
-      if (zoneRef.current) zoneRef.current.style.width = `${zone.current * 200}%`;
+      setMsg(`${T.interior.forgeHit} ${T.interior.forgeHits(hitsRef.current, FORGE_NEED)}`);
     } else {
       play('bump');
       setFlash('miss');
-      setMsg(`${T.interior.forgeMiss} ${T.interior.forgeHits(Math.max(0, hitsRef.current - 1), FORGE_NEED)}`);
       hitsRef.current = Math.max(0, hitsRef.current - 1);
-      setHits(hitsRef.current);
-      speed.current = Math.max(0.0011, speed.current * 0.85);
+      setMsg(`${T.interior.forgeMiss} ${T.interior.forgeHits(hitsRef.current, FORGE_NEED)}`);
+    }
+    // La dificultad siempre acompaña a los golpes: sube al acertar y baja al fallar.
+    zone.current = zoneOf(hitsRef.current);
+    speed.current = speedOf(hitsRef.current);
+    if (zoneRef.current) zoneRef.current.style.width = `${zone.current * 200}%`;
+    setHits(hitsRef.current);
+    if (hitsRef.current >= FORGE_NEED) {
+      doneRef.current = true;
+      setTimeout(onWin, 700);
     }
     setTimeout(() => setFlash(null), 300);
   };
@@ -257,7 +265,10 @@ function ForgeGame({ T, strikeRef, onWin, onCancel }) {
       </div>
       <p className="small forge-status" role="status">{msg || T.interior.forgeHits(0, FORGE_NEED)}</p>
       <div className="town-dialog-actions">
-        <button type="button" className="btn btn-primary" onClick={strike}>{T.interior.forgeStrike} · {hits}/{FORGE_NEED}</button>
+        {/* pointerdown responde antes que click; detail 0 distingue el Enter sobre el boton */}
+        <button type="button" className="btn btn-primary" onPointerDown={strike} onClick={(e) => e.detail === 0 && strike()}>
+          {T.interior.forgeStrike} · {hits}/{FORGE_NEED}
+        </button>
         <button type="button" className="btn" onClick={onCancel}>{T.exit}</button>
       </div>
     </div>
