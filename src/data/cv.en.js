@@ -7,19 +7,19 @@ export const BIRTHDATE = es.BIRTHDATE;
 
 export const profile = {
   ...es.profile,
-  title: 'Software Engineer',
+  title: 'QA Automation Engineer · SDET',
   role: 'QA Automation · DevOps · Applied AI',
   location: 'Valdepeñas (Ciudad Real), Spain',
   status: 'Open to new quests',
   cvPdf: 'CV_Angel_Garcia_Lopezlira_EN.pdf',
   intro: [
-    'Hello, traveler! I’m Ángel, a software engineer specialized in test automation and DevOps.',
-    'I design BDD end-to-end tests, analyze performance and build CI/CD pipelines with ephemeral environments.',
-    'I’m also exploring development with AI agents: multi-agent orchestration and spec-driven development.',
+    'Hello, traveler! I’m Ángel, a computer engineer specialised in test automation and DevOps, with almost a year of experience in QA Automation and currently studying a Master’s in Computer Engineering.',
+    'BDD end-to-end testing (Cucumber/Gherkin with Cypress), API testing with Postman, performance testing with Gatling and CI/CD in Jenkins with ephemeral environments provisioned with Vagrant.',
+    'I also develop with AI agents (multi-agent orchestration and spec-driven development). Looking for an agile team where I can contribute to quality automation.',
   ],
   highlights: merge(es.profile.highlights, [
     { label: '100 BDD end-to-end scenarios', detail: 'Cypress + Gherkin with the Page Object Model' },
-    { label: 'Fully unattended regression', detail: 'Jenkins + Vagrant, parallel runs' },
+    { label: 'Fully unattended regression', detail: 'PowerShell + Jenkins + Vagrant: 15+ suites per release' },
     { label: 'Building with AI agents', detail: 'MBRG: multi-agent orchestration and SDD' },
     { label: 'Master’s degree in progress', detail: 'Computer Engineering · UCLM' },
   ]),
@@ -29,11 +29,11 @@ export const experience = merge(es.experience, [
   {
     title: 'QA Automation Developer',
     period: 'Aug 2026 – Nov 2026',
-    reward: 'Team freed from manual test runs',
+    reward: '2-3 h saved per release for the team',
     points: [
       'Automated regression and integration tests: document generation and comparison on Windows and Linux virtual machines.',
-      'Set up unattended execution of the test suites (2–3 h each), previously run by hand: the team no longer had to babysit them and runs could go in parallel.',
-      'Built an in-house tool to launch controlled loads and automate performance testing, with a REST API and a web interface.',
+      'Built PowerShell scripts to run 15+ test suites per release (product versions 6 and 7) autonomously in virtualised environments, previously launched by hand by 3-4 team members: around 2-3 h of manual validation saved per release (roughly every 2 weeks), and runs now execute in parallel.',
+      'Built an in-house tool (REST API and web UI) to launch controlled loads and performance tests.',
     ],
   },
   {
@@ -51,18 +51,20 @@ export const experience = merge(es.experience, [
 
 export const projects = merge(es.projects, [
   {
-    summary: 'Battle royale on EU4/RISK-style maps, with a server, a web viewer and a Discord bot.',
+    summary: 'Battle royale on EU4/RISK-style maps (each round a random faction falls and a neighbour takes its provinces), with a server, web viewer and Discord bot.',
     points: [
       'Built with an AI agent workflow: an orchestrator splits each task between planner, implementer and reviewer agents.',
       'Spec-driven development (SDD): spec, plan and tasks before touching any code.',
     ],
-    stack: ['TypeScript', 'Node.js', 'Claude Code', 'Multi-agent', 'SDD'],
     links: [{ label: 'Repository', href: es.projects[0].links[0].href }],
   },
   {
     name: 'ESIMEDIA · Microservices streaming',
     party: 'Team project · 6 people',
     summary: 'Video-on-demand platform with a decoupled microservices architecture, RBAC and JWT security, and test-driven development (TDD).',
+    points: [
+      'Test-driven development (TDD) with JUnit and Mockito, reaching 60% code coverage.',
+    ],
   },
   {
     party: 'Team project · 4 people',
@@ -82,13 +84,13 @@ export const languages = [
 ];
 
 export const skillSchools = merge(es.skillSchools, [
-  { school: 'Testing and automation', skills: ['Cypress', 'Cucumber (Gherkin)', 'JUnit', 'Gatling', 'E2E', 'Regression', 'Performance'] },
+  { school: 'Testing and automation', skills: ['Cypress', 'Cucumber (Gherkin)', 'JUnit', 'Mockito', 'Gatling', 'Postman', 'SonarQube', 'E2E', 'Regression', 'Integration', 'Performance', 'TDD', 'BDD', 'Page Object Model'] },
   { school: 'DevOps and cloud' },
   { school: 'Applied AI', skills: ['Claude Code', 'AI agents', 'Multi-agent orchestration', 'SDD (Spec-Driven Development)'] },
-  { school: 'Languages' },
+  { school: 'Languages', skills: ['Java', 'JavaScript/TypeScript', 'Python', 'PowerShell', 'C#', 'C/C++', 'SQL'] },
   { school: 'Backend and frontend', skills: ['Spring Boot', 'Node.js', 'React', 'Angular', 'REST APIs', 'Microservices', 'HTML5', 'CSS3'] },
   { school: 'Databases' },
-  { school: 'Tools' },
+  { school: 'Tools', skills: ['Git', 'Maven', 'Jira', 'Visual Studio', 'Eclipse', 'Scrum'] },
 ]);
 
 export const passives = [

@@ -5,7 +5,7 @@ export const BIRTHDATE = '2004-08-07';
 
 export const profile = {
   name: 'Ángel García Lopezlira',
-  title: 'Ingeniero de Software',
+  title: 'QA Automation Engineer · SDET',
   role: 'QA Automation · DevOps · IA aplicada',
   location: 'Valdepeñas (Ciudad Real), España',
   status: 'Abierto a nuevas misiones',
@@ -15,14 +15,14 @@ export const profile = {
   cvPdf: 'CV_Angel_Garcia_Lopezlira.pdf',
   photo: 'avatar.jpg',
   intro: [
-    '¡Hola, viajero! Soy Ángel, ingeniero informático especializado en automatización de pruebas y DevOps.',
-    'Diseño pruebas E2E en BDD, analizo rendimiento y monto pipelines de CI/CD con entornos efímeros.',
-    'Ahora también exploro el desarrollo con agentes de IA: orquestación multiagente y desarrollo guiado por especificaciones.',
+    '¡Hola, viajero! Soy Ángel, ingeniero informático especializado en automatización de pruebas y DevOps, con casi un año de experiencia en QA Automation y cursando el Máster en Ingeniería Informática.',
+    'Pruebas E2E en BDD (Cucumber/Gherkin con Cypress), pruebas de API con Postman, rendimiento con Gatling y CI/CD en Jenkins con entornos efímeros aprovisionados con Vagrant.',
+    'También desarrollo con agentes de IA (orquestación multiagente y desarrollo guiado por especificaciones). Busco un equipo ágil donde aportar en la automatización de la calidad.',
   ],
   // Resumen rápido para quien solo mira la primera pantalla. Cada hazaña lleva a su sección.
   highlights: [
     { icon: '⚔', label: '100 escenarios E2E en BDD', detail: 'Cypress + Gherkin con Page Object Model', to: 'misiones' },
-    { icon: '⚙', label: 'Regresión 100 % autónoma', detail: 'Jenkins + Vagrant, ejecuciones en paralelo', to: 'misiones' },
+    { icon: '⚙', label: 'Regresión 100 % autónoma', detail: 'PowerShell + Jenkins + Vagrant: +15 baterías por versión', to: 'misiones' },
     { icon: '✦', label: 'Desarrollo con agentes de IA', detail: 'MBRG: orquestación multiagente y SDD', to: 'misiones' },
     { icon: '◆', label: 'Máster en curso', detail: 'Ingeniería Informática · UCLM', to: 'historia' },
   ],
@@ -34,11 +34,11 @@ export const experience = [
     org: 'DocPath',
     period: 'Ago 2026 – Nov 2026',
     logo: 'logo_docpath.png',
-    reward: 'Equipo liberado de las ejecuciones manuales',
+    reward: '2-3 h ahorradas al equipo en cada release',
     points: [
       'Automaticé pruebas de regresión e integración: generación y comparación de documentos en máquinas virtuales Windows y Linux.',
-      'Implanté la ejecución desatendida de las baterías (2-3 h cada una), antes manual: el equipo quedó libre de esa tarea y las ejecuciones pasaron a lanzarse en paralelo.',
-      'Desarrollé una herramienta propia para lanzar cargas controladas y automatizar pruebas de rendimiento, con API REST e interfaz web.',
+      'Desarrollé scripts en PowerShell para lanzar de forma autónoma en entornos virtualizados más de 15 baterías de pruebas por versión (versiones 6 y 7 del producto), que antes lanzaban a mano 3-4 personas del equipo: unas 2-3 h de validación manual ahorradas por release (aproximadamente cada 2 semanas), y las ejecuciones pasaron a lanzarse en paralelo.',
+      'Desarrollé una herramienta propia (API REST e interfaz web) para lanzar cargas controladas y pruebas de rendimiento.',
     ],
   },
   {
@@ -61,7 +61,7 @@ export const projects = [
     name: 'MBRG · Map Battle Royale Game',
     thumb: 'projects/mbrg.jpg',
     state: 'en curso',
-    summary: 'Battle royale sobre mapas de estilo EU4/RISK, con servidor, visor web y bot de Discord.',
+    summary: 'Battle royale sobre mapas de estilo EU4/RISK (cada ronda cae una facción al azar y un vecino se queda sus provincias), con servidor, visor web y bot de Discord.',
     points: [
       'Hecho con un flujo de agentes de IA: un orquestador reparte cada tarea entre planner, implementer y reviewer.',
       'Desarrollo guiado por especificaciones (SDD): spec, plan y tareas antes de tocar código.',
@@ -76,7 +76,9 @@ export const projects = [
     party: 'Proyecto en equipo · 6 personas',
     summary:
       'Plataforma de vídeo bajo demanda con arquitectura desacoplada en microservicios, seguridad basada en RBAC y JWT, y desarrollo guiado por pruebas (TDD).',
-    points: [],
+    points: [
+      'Desarrollo guiado por pruebas (TDD) con JUnit y Mockito, con un 60 % de cobertura de código.',
+    ],
     stack: ['React', 'TypeScript', 'Java 21', 'Spring Boot 3', 'MongoDB', 'JWT', 'Docker'],
     links: [
       { label: 'Frontend', href: 'https://github.com/ISO-2526/ESIMedia_FE' },
@@ -125,13 +127,13 @@ export const languages = [
 ];
 
 export const skillSchools = [
-  { school: 'Pruebas y automatización', skills: ['Cypress', 'Cucumber (Gherkin)', 'JUnit', 'Gatling', 'E2E', 'Regresión', 'Rendimiento'] },
+  { school: 'Pruebas y automatización', skills: ['Cypress', 'Cucumber (Gherkin)', 'JUnit', 'Mockito', 'Gatling', 'Postman', 'SonarQube', 'E2E', 'Regresión', 'Integración', 'Rendimiento', 'TDD', 'BDD', 'Page Object Model'] },
   { school: 'DevOps y cloud', skills: ['Jenkins', 'Vagrant', 'VMware', 'Docker', 'Azure DevOps', 'Apache Kafka', 'CI/CD'] },
   { school: 'IA aplicada', skills: ['Claude Code', 'Agentes de IA', 'Orquestación multiagente', 'SDD (Spec-Driven Development)'] },
-  { school: 'Lenguajes', skills: ['Java', 'JavaScript', 'TypeScript', 'Python', 'C#', 'C/C++', 'SQL'] },
+  { school: 'Lenguajes', skills: ['Java', 'JavaScript/TypeScript', 'Python', 'PowerShell', 'C#', 'C/C++', 'SQL'] },
   { school: 'Backend y frontend', skills: ['Spring Boot', 'Node.js', 'React', 'Angular', 'APIs REST', 'Microservicios', 'HTML5', 'CSS3'] },
   { school: 'Bases de datos', skills: ['MySQL', 'SQL Server', 'MongoDB', 'Oracle Database'] },
-  { school: 'Herramientas', skills: ['Git', 'Maven', 'Postman', 'Jira', 'SonarQube', 'Scrum'] },
+  { school: 'Herramientas', skills: ['Git', 'Maven', 'Jira', 'Visual Studio', 'Eclipse', 'Scrum'] },
 ];
 
 // Competencias personales como habilidades pasivas.

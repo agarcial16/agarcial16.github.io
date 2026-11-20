@@ -2,7 +2,7 @@
 export const STRINGS = {
   es: {
     meta: {
-      title: 'Ángel García Lopezlira · QA Automation y DevOps',
+      title: 'Ángel García Lopezlira · QA Automation Engineer · SDET',
       description: 'Portafolio con estética de JRPG: experiencia, proyectos, habilidades y contacto.',
     },
     langName: 'Español',
@@ -203,7 +203,7 @@ export const STRINGS = {
 
   en: {
     meta: {
-      title: 'Ángel García Lopezlira · QA Automation & DevOps',
+      title: 'Ángel García Lopezlira · QA Automation Engineer · SDET',
       description: 'A JRPG-style portfolio: experience, projects, skills and contact.',
     },
     langName: 'English',
