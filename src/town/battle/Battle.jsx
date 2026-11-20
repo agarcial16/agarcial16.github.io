@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { HERO_STATS, SKILLS, BUG_SPRITE } from './data.js';
-import { buildSprites, ANGEL, ANGEL_SHAPE } from '../art.js';
+import { HERO_STATS, SKILLS } from './data.js';
+import { buildSprites, ANGEL, ANGEL_SHAPE, BUG_SPRITE } from '../artSkin.js';
 import { play, jingle } from '../sound.js';
 import { isRetro, quantize } from '../../lib/gameboy.js';
 

@@ -1,6 +1,6 @@
 import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { TILE, W, H, BUILDINGS, START, NPC, CHEST, LEVER, BRIDGE, BUSHES, world, cellAt, ground } from './map.js';
-import { drawMap, drawChest, drawBridge, drawLever, drawBush, buildSprites, windowRects, ANGEL, ANGEL_SHAPE, VISITOR, drawCat } from './art.js';
+import { drawMap, drawChest, drawBridge, drawLever, drawBush, buildSprites, windowRects, ANGEL, ANGEL_SHAPE, VISITOR, drawCat } from './artSkin.js';
 import {
   drawAmbient, drawButterflies, drawFireflies, drawPuffs, drawSparkles, drawBubble, drawOpenDoor, drawGlint,
   dayPhase, drawDaylight, drawWindowLights, isRaining, drawRain,

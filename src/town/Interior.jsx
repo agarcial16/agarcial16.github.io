@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import { drawInterior, drawZzz, HOSTS } from './interior.js';
-import { buildSprites, VISITOR, HERO } from './art.js';
+import { drawInterior, drawZzz, HOSTS } from './interiorSkin.js';
+import { buildSprites, VISITOR, HERO } from './artSkin.js';
 import { play } from './sound.js';
 import { dayPhase } from './effects.js';
 import { isRetro, quantize } from '../lib/gameboy.js';
