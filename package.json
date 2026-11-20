@@ -13,7 +13,7 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "predeploy": "npm run build",
-    "deploy": "gh-pages -d dist",
+    "deploy": "gh-pages --add -d dist",
     "snapshot": "node scripts/snapshot.mjs",
     "compare": "node scripts/compare.mjs"
   },
