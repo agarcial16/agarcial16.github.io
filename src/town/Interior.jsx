@@ -1,10 +1,11 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { drawInterior, drawZzz, HOSTS } from './interiorSkin.js';
 import { buildSprites, VISITOR, HERO } from './artSkin.js';
 import { play } from './sound.js';
 import { dayPhase } from './effects.js';
 import { isRetro, quantize } from '../lib/gameboy.js';
 import { track } from '../lib/visitas.js';
+import { paginasDeTexto, presupuestoDialogo } from '../lib/paginas.js';
 
 const reduceMotion = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 
@@ -46,12 +47,21 @@ export default function Interior({ building, T, width, height, scale, catGone, f
     : guest === null ? baseLines
       : [night && guest === 1 ? guests[guest].sleep : dayRumor(guests[guest].talk, guest)];
   const speaker = guest !== null ? guests[guest].name : text.speaker;
+  // Paginas del dialogo: en pantallas estrechas las lineas se trocean para que el
+  // recuadro quede de tamano fijo; cada pagina recuerda su linea semantica.
+  const pages = useMemo(
+    () => lines.flatMap((l, li) => paginasDeTexto(l, presupuestoDialogo()).map((text) => ({ li, text }))),
+    [lines],
+  );
   const [i, setI] = useState(0);
   const [shown, setShown] = useState(() => (reduceMotion() ? Infinity : 0));
-  const line = lines[i];
+  const page = pages[i];
+  const line = page.text;
   const typing = shown < line.length;
-  const last = i === lines.length - 1;
-  const canPet = isCat && !catJoined && i === lines.length - 2 && !typing;
+  const last = i === pages.length - 1;
+  // Ultima pagina de su linea: aqui se ofrecen las acciones de esa linea semantica.
+  const lastOfLine = i + 1 >= pages.length || pages[i + 1].li !== page.li;
+  const canPet = isCat && !catJoined && page.li === lines.length - 2 && lastOfLine && !typing;
   const pet = () => {
     play('meow');
     onPetCat?.();

@@ -1,4 +1,4 @@
-import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { TILE, W, H, BUILDINGS, START, NPC, CHEST, LEVER, BRIDGE, BUSHES, world, cellAt, ground } from './map.js';
 import { drawMap, drawChest, drawBridge, drawLever, drawBush, buildSprites, windowRects, ANGEL, ANGEL_SHAPE, VISITOR, drawCat } from './artSkin.js';
 import {
@@ -16,6 +16,7 @@ const Interior = lazy(() => import('./Interior.jsx'));
 const CAVE_KEY = 'pueblo-cueva';
 const loadCave = () => { try { return JSON.parse(localStorage.getItem(CAVE_KEY) ?? '[]'); } catch { return []; } };
 import { track } from '../lib/visitas.js';
+import { paginasDeTexto, presupuestoDialogo } from '../lib/paginas.js';
 import { feedKonami, isRetro, quantize } from '../lib/gameboy.js';
 
 const STEP_MS = 150;
@@ -523,14 +524,14 @@ export default function Town({ places, onMenu }) {
   };
   const pressA = () => {
     feedKonami('a');
-    if (battle || interior) return window.dispatchEvent(new CustomEvent('battle-input', { detail: 'a' }));
-    if (dialog) return;
+    // Con un cuadro de dialogo abierto, A avanza el texto (lo escucha TownDialog).
+    if (battle || interior || dialog) return window.dispatchEvent(new CustomEvent('battle-input', { detail: 'a' }));
     interact();
   };
   const pressB = () => {
     feedKonami('b');
-    if (battle || interior) window.dispatchEvent(new CustomEvent('battle-input', { detail: 'b' }));
-    else if (dialog) setDialog(null);
+    // B cierra el dialogo: lo escucha TownDialog como si fuera la tecla Esc.
+    if (battle || interior || dialog) window.dispatchEvent(new CustomEvent('battle-input', { detail: 'b' }));
     else if (showJournal) setShowJournal(false);
     else if (ending) setEnding(false);
   };
@@ -649,11 +650,17 @@ export default function Town({ places, onMenu }) {
 }
 
 function TownDialog({ speaker, lines, action, T, onClose }) {
+  // En pantallas estrechas cada linea se trocea en paginas de dialogo para que
+  // el recuadro no crezca sin fin; en escritorio cada linea es una sola pagina.
+  const paginas = useMemo(
+    () => lines.flatMap((l) => paginasDeTexto(l, presupuestoDialogo())),
+    [lines],
+  );
   const [i, setI] = useState(0);
   const [shown, setShown] = useState(() => (reduceMotion() ? Infinity : 0));
-  const line = lines[i];
+  const line = paginas[i];
   const typing = shown < line.length;
-  const last = i === lines.length - 1;
+  const last = i === paginas.length - 1;
   const next = useCallback(() => {
     if (typing) return setShown(Infinity);
     if (last) return onClose();
@@ -678,6 +685,13 @@ function TownDialog({ speaker, lines, action, T, onClose }) {
     };
     window.addEventListener('keydown', key, true);
     return () => window.removeEventListener('keydown', key, true);
+  }, [next, onClose]);
+
+  // Cruceta de la consola: A avanza el texto, B cierra el cuadro.
+  useEffect(() => {
+    const pad = (e) => { if (e.detail === 'a') next(); else if (e.detail === 'b') onClose(); };
+    window.addEventListener('battle-input', pad);
+    return () => window.removeEventListener('battle-input', pad);
   }, [next, onClose]);
 
   return (
