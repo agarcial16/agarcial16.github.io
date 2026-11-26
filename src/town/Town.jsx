@@ -9,6 +9,7 @@ import { play, jingle, setTheme, setSound, setMusic, loadPreference, loadMusicPr
 import { OBJECTIVES, loadJournal, saveJournal, isComplete, loadWorld, saveWorld } from './journal.js';
 import { useI18n, LangToggle } from '../i18n/index.jsx';
 import { ENEMIES } from './battle/data.js';
+import BootScreen from '../components/BootScreen.jsx';
 
 // El combate se descarga solo al entrar en la cueva.
 const Battle = lazy(() => import('./battle/Battle.jsx'));
@@ -96,6 +97,9 @@ export default function Town({ places, onMenu }) {
   const [ending, setEnding] = useState(false);
   const [battle, setBattle] = useState(null);
   const [interior, setInterior] = useState(null);
+  // Arranque de consola al entrar al pueblo: cada visita, no una por sesión.
+  // ?boot=0 lo salta (pruebas y automatizaciones).
+  const [boot, setBoot] = useState(() => typeof window === 'undefined' || new URLSearchParams(window.location.search).get('boot') !== '0');
   const [defeated, setDefeated] = useState(loadCave);
   const defeatedRef = useRef(defeated);
   defeatedRef.current = defeated;
@@ -213,7 +217,7 @@ export default function Town({ places, onMenu }) {
     held: [], tap: null, paused: false, chestOpen: false, chestT0: 0, talked: false, puffs: [], leverT0: 0,
     anim: reduceMotion() ? null : { kind: 'fadein', t0: performance.now() },
   });
-  game.current.paused = Boolean(dialog || place || showJournal || ending || battle || interior);
+  game.current.paused = Boolean(dialog || place || showJournal || ending || battle || interior || boot);
 
   const openPlace = useCallback((b) => { setPlace(b); complete(b.id); }, [complete]);
 
@@ -573,6 +577,7 @@ export default function Town({ places, onMenu }) {
               role="img"
               aria-label={T.canvas}
             />
+            {boot && <BootScreen onDone={() => setBoot(false)} />}
             {toast && (
               <p className="town-toast" role="status">
                 <span className="hl">{T.journal.done}</span> {objectiveLabel(toast)}

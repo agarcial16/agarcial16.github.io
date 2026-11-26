@@ -644,6 +644,8 @@ html.developer .dialog-speaker::before { content: '~$ '; color: #35e06a; }
 
 /* Encendido del rombo: oleada pixel a pixel de gris acero a azul (parpadeo retro). */
 .brand-pixel .brand-p { animation: plug-on 0.9s steps(1) both; }
+/* En el arranque del juego la oleada va mas lenta para poder saborearla. */
+.boot .brand-p { animation-duration: 1.7s; }
 @keyframes plug-on {
   0%, 20% { fill: #7d7d7d; }
   28% { fill: #3446c2; }
@@ -657,9 +659,9 @@ html.developer .dialog-speaker::before { content: '~$ '; color: #35e06a; }
 .title-emblem { margin: 0 auto 12px; }
 .footer-mark { display: inline-block; vertical-align: -3px; width: 16px; height: 16px; margin-right: 6px; image-rendering: pixelated; }
 
-/* Pantalla de arranque estilo CRT con el logo del estudio. */
+/* Pantalla de arranque estilo CRT, dentro de la pantalla de la consola. */
 .boot {
-  position: fixed; inset: 0; z-index: 120; display: grid; place-items: center;
+  position: absolute; inset: 0; z-index: 20; display: grid; place-items: center;
   background: #05060d; color: var(--muted); overflow: hidden;
 }
 .boot::after {
@@ -678,14 +680,15 @@ html.developer .dialog-speaker::before { content: '~$ '; color: #35e06a; }
   55% { transform: scaleY(1.04); filter: brightness(1.4); }
   100% { transform: scaleY(1); filter: brightness(1); }
 }
+.boot-logo { width: min(140px, 38vw); height: auto; }
 .boot-brand {
   margin: 0; font-family: var(--font-pixel); font-size: 1.15rem; letter-spacing: 0.35em; color: #d6d6d6;
   text-shadow: 0 0 12px rgba(52, 70, 194, 0.55); padding-left: 0.35em;
-  animation: brand-in 0.35s steps(2) 0.7s both;
+  animation: brand-in 0.35s steps(2) 1.1s both;
 }
 .boot-presents {
   margin: 0; font-family: var(--font-pixel); font-size: 0.5rem; letter-spacing: 0.4em; color: #7d7d7d;
-  padding-left: 0.4em; animation: brand-in 0.35s steps(2) 0.95s both;
+  padding-left: 0.4em; animation: brand-in 0.35s steps(2) 1.55s both;
 }
 @keyframes brand-in { from { opacity: 0; } to { opacity: 1; } }
 

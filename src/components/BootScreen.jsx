@@ -1,35 +1,32 @@
-// Arranque estilo consola: el logo de Complex (pixel JRPG) se enciende de gris a
-// azul, aparece el nombre y desaparece hacia la pantalla de título, como el logo
-// de un estudio al encender una consola. Una vez por sesión, se salta con tecla
-// o clic y respeta el movimiento reducido.
+// Arranque de la consola al entrar al pueblo: el logo de Complex (pixel JRPG) se
+// enciende de gris a azul con calma, aparece el nombre y funde hacia el juego.
+// Se muestra CADA vez que se abre el pueblo (no por sesión), se salta con
+// cualquier tecla o clic y respeta el movimiento reducido.
 import { useEffect, useState } from 'react';
 import { useI18n } from '../i18n/index.jsx';
 import Logo from './Logo.jsx';
 
-const KEY = 'pueblo-boot';
 const reduceMotion = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-const yaArranco = () => { try { return sessionStorage.getItem(KEY) === '1'; } catch { return false; } };
+const DURACION = 3200;
+const FUNDIDO = 500;
 
-export default function BootScreen() {
+export default function BootScreen({ onDone }) {
   const { t } = useI18n();
-  const [state, setState] = useState(() => (yaArranco() ? 'off' : 'boot'));
+  const [state, setState] = useState('boot');
 
-  // Un segundo largo de logo y fundido; con movimiento reducido, directo y breve.
+  // Encendido largo (para saborear la oleada del rombo) y apagado.
   useEffect(() => {
     if (state !== 'boot') return;
-    const t0 = setTimeout(() => setState('out'), reduceMotion() ? 350 : 1500);
+    const t0 = setTimeout(() => setState('out'), reduceMotion() ? 500 : DURACION);
     return () => clearTimeout(t0);
   }, [state]);
 
-  // Al terminar el fundido se marca la sesión y el overlay desaparece.
+  // Al terminar el fundido, la consola queda en manos del juego.
   useEffect(() => {
     if (state !== 'out') return;
-    const t0 = setTimeout(() => {
-      try { sessionStorage.setItem(KEY, '1'); } catch { /* sin almacenamiento */ }
-      setState('off');
-    }, 480);
+    const t0 = setTimeout(() => onDone?.(), FUNDIDO);
     return () => clearTimeout(t0);
-  }, [state]);
+  }, [state, onDone]);
 
   // Cualquier tecla o clic salta el arranque.
   useEffect(() => {
@@ -39,8 +36,6 @@ export default function BootScreen() {
     window.addEventListener('pointerdown', saltar);
     return () => { window.removeEventListener('keydown', saltar); window.removeEventListener('pointerdown', saltar); };
   }, [state]);
-
-  if (state === 'off') return null;
 
   return (
     <div className={`boot ${state === 'out' ? 'is-out' : ''}`} role="status" aria-label={`Complex ${t.boot.presents}`}>
