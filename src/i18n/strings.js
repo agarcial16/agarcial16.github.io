@@ -8,6 +8,8 @@ export const STRINGS = {
     langName: 'Español',
     switchTo: 'English',
     switchLabel: 'Change language to English',
+    home: 'Portada',
+    homeHint: 'Volver al inicio',
     menu: {
       estado: ['Estado', 'Quién soy'],
       habilidades: ['Habilidades', 'Tecnologías'],
@@ -52,7 +54,7 @@ export const STRINGS = {
     history: { title: 'Historia · Formación', languages: 'Idiomas' },
     inn: {
       title: 'Posada · ¿Guardar partida?',
-      text: '¿Buscas a alguien para tu equipo? Escríbeme y seguimos la aventura juntos.',
+      text: '¿Buscas a alguien para tu equipo? Escríbeme.',
       email: 'Correo',
       send: '✉ Enviar mensaje',
     },
@@ -197,7 +199,6 @@ export const STRINGS = {
       ending: {
         title: '¡Partida completada!',
         text: 'Has recorrido todo Villa Portafolio y te llevas el CV. Gracias por jugar.',
-        cta: '¿Hablamos? Estoy abierto a nuevas misiones.',
         email: 'Escribirme',
         keep: 'Seguir explorando',
         medal: 'Medalla de exploración: gato, forja y cueva. ¡Lo has visto TODO!',
@@ -213,6 +214,8 @@ export const STRINGS = {
     langName: 'English',
     switchTo: 'Español',
     switchLabel: 'Cambiar idioma a español',
+    home: 'Home',
+    homeHint: 'Back to start',
     menu: {
       estado: ['Status', 'About me'],
       habilidades: ['Skills', 'Tech stack'],
@@ -257,7 +260,7 @@ export const STRINGS = {
     history: { title: 'History · Education', languages: 'Languages' },
     inn: {
       title: 'Inn · Save your game?',
-      text: 'Looking for someone to join your party? Drop me a line and let’s continue the adventure together.',
+      text: 'Looking for someone to join your party? Drop me a line.',
       email: 'Email',
       send: '✉ Send a message',
     },
@@ -402,7 +405,6 @@ export const STRINGS = {
       ending: {
         title: 'Game complete!',
         text: 'You explored all of Portfolio Village and got the CV. Thanks for playing.',
-        cta: 'Shall we talk? I’m open to new quests.',
         email: 'Email me',
         keep: 'Keep exploring',
         medal: 'Exploration medal: cat, forge and cave. You’ve seen it ALL!',

@@ -639,6 +639,9 @@ html.developer .dialog-speaker::before { content: '~$ '; color: #35e06a; }
 }
 .forge-status { min-height: 1.6em; margin: 0; }
 
+/* ===== Boton de portada en el menu lateral ===== */
+.menu-home { margin-bottom: 10px; padding-bottom: 12px; border-bottom: 2px dashed rgba(238, 241, 255, 0.3); }
+
 /* ===== Logo de la marca Complex y pantalla de arranque ===== */
 .brand-pixel { display: block; overflow: visible; filter: drop-shadow(0 0 6px rgba(52, 70, 194, 0.25)); }
 

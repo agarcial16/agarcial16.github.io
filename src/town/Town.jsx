@@ -74,7 +74,7 @@ function useModalKeys(onClose, focusRef) {
   }, [onClose, focusRef]);
 }
 
-export default function Town({ places, onMenu }) {
+export default function Town({ places, onMenu, onHome }) {
   const { t, cv, lang } = useI18n();
   const T = t.town;
   const profile = cv.profile;
@@ -560,6 +560,7 @@ export default function Town({ places, onMenu }) {
           <button type="button" className="btn" aria-pressed={sound} onClick={toggleSound}>{T.sound}: {sound ? T.on : T.off}</button>
           {sound && <button type="button" className="btn" aria-pressed={musicOn} onClick={toggleMusic}>{T.music}: {musicOn ? T.on : T.off}</button>}
           <LangToggle />
+          <button type="button" className="btn" onClick={onHome}>{t.home}</button>
           <button type="button" className="btn" onClick={onMenu}>{T.menu} <span className="muted small">(Esc)</span></button>
         </div>
       </header>
@@ -788,7 +789,6 @@ function Ending({ T, t, profile, medal, onClose }) {
         <h2 id="ending-title" className="ending-title">{E.title}</h2>
         <p>{E.text}</p>
         {medal && <p className="hl">🏅 {E.medal}</p>}
-        <p className="hl">{E.cta}</p>
         <p className="links ending-links">
           <a ref={firstRef} className="btn btn-primary" href={`mailto:${profile.email}`}>✉ {E.email}</a>
           <a className="btn" href={profile.linkedin} target="_blank" rel="noreferrer">LinkedIn ↗</a>

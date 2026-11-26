@@ -17,7 +17,7 @@ export const profile = {
   intro: [
     '¡Hola, viajero! Soy Ángel, ingeniero informático especializado en automatización de pruebas y DevOps, con casi un año de experiencia en QA Automation y cursando el Máster en Ingeniería Informática.',
     'Pruebas E2E en BDD (Cucumber/Gherkin con Cypress), pruebas de API con Postman, rendimiento con Gatling y CI/CD en Jenkins con entornos efímeros aprovisionados con Vagrant.',
-    'También desarrollo con agentes de IA (orquestación multiagente y desarrollo guiado por especificaciones). Busco un equipo ágil donde aportar en la automatización de la calidad.',
+    'También desarrollo con agentes de IA (orquestación multiagente y desarrollo guiado por especificaciones). Busco un equipo donde automatizar la calidad.',
   ],
   // Resumen rápido para quien solo mira la primera pantalla. Cada hazaña lleva a su sección.
   highlights: [

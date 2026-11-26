@@ -15,7 +15,7 @@ export const profile = {
   intro: [
     'Hello, traveler! I’m Ángel, a computer engineer specialised in test automation and DevOps, with almost a year of experience in QA Automation and currently studying a Master’s in Computer Engineering.',
     'BDD end-to-end testing (Cucumber/Gherkin with Cypress), API testing with Postman, performance testing with Gatling and CI/CD in Jenkins with ephemeral environments provisioned with Vagrant.',
-    'I also develop with AI agents (multi-agent orchestration and spec-driven development). Looking for an agile team where I can contribute to quality automation.',
+    'I also develop with AI agents (multi-agent orchestration and spec-driven development). Looking for a team where I can automate quality.',
   ],
   highlights: merge(es.profile.highlights, [
     { label: '100 BDD end-to-end scenarios', detail: 'Cypress + Gherkin with the Page Object Model' },

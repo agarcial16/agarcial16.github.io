@@ -44,11 +44,18 @@ export default function App() {
     setActive(id);
   };
 
+  // Vuelta a la portada: pantalla de inicio con el emblema y el titulo.
+  const goHome = () => {
+    if (!window.location.hash) return;
+    window.history.pushState(null, '', `${window.location.pathname}${window.location.search}`);
+    window.dispatchEvent(new HashChangeEvent('hashchange'));
+  };
+
   if (!active) return <TitleScreen onNew={() => open(TOWN)} onContinue={() => open('estado')} />;
   if (active === TOWN) {
     return (
       <Suspense fallback={<p className="town-loading">{t.loadingTown}</p>}>
-        <Town places={PLACES} onMenu={() => open('estado')} />
+        <Town places={PLACES} onMenu={() => open('estado')} onHome={goHome} />
       </Suspense>
     );
   }
@@ -72,6 +79,10 @@ export default function App() {
       <div className="stars" aria-hidden="true" />
       <aside className="sidebar">
         <nav className="win menu" aria-label={t.sections} onKeyDown={onMenuKey}>
+          <button type="button" className="menu-item menu-home" onClick={goHome}>
+            {t.home}
+            <span className="menu-hint">{t.homeHint}</span>
+          </button>
           {MENU.map((m, i) => (
             <button
               key={m.id}
