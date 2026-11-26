@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { useI18n, LangToggle } from '../i18n/index.jsx';
+import Logo from './Logo.jsx';
 
 export default function TitleScreen({ onNew, onContinue }) {
   const { t, cv } = useI18n();
@@ -12,6 +13,7 @@ export default function TitleScreen({ onNew, onContinue }) {
       <div className="stars" aria-hidden="true" />
       <div className="title-lang"><LangToggle /></div>
       <div className="title-logo">
+        <Logo size={80} className="title-emblem" />
         <p className="title-kicker">{t.title.kicker}</p>
         <h1 className="title-name">{profile.name}</h1>
         <p className="title-role">{profile.role}</p>
@@ -32,7 +34,10 @@ export default function TitleScreen({ onNew, onContinue }) {
       </nav>
 
       <p className="press-start" aria-hidden="true">PRESS START</p>
-      <p className="title-footer">© {new Date().getFullYear()} {profile.name}</p>
+      <p className="title-footer">
+        © {new Date().getFullYear()} {profile.name} · {t.title.madeBy}{' '}
+        <img className="footer-mark" src="brand/logo-pixel-16-jrpg.png" alt="" width="16" height="16" />Complex
+      </p>
     </main>
   );
 }

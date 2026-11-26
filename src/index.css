@@ -638,3 +638,60 @@ html.developer .dialog-speaker::before { content: '~$ '; color: #35e06a; }
   filter: drop-shadow(0 1px 0 #05060d);
 }
 .forge-status { min-height: 1.6em; margin: 0; }
+
+/* ===== Logo de la marca Complex y pantalla de arranque ===== */
+.brand-pixel { display: block; overflow: visible; filter: drop-shadow(0 0 6px rgba(52, 70, 194, 0.25)); }
+
+/* Encendido del rombo: oleada pixel a pixel de gris acero a azul (parpadeo retro). */
+.brand-pixel .brand-p { animation: plug-on 0.9s steps(1) both; }
+@keyframes plug-on {
+  0%, 20% { fill: #7d7d7d; }
+  28% { fill: #3446c2; }
+  36% { fill: #7d7d7d; }
+  52% { fill: #7d7d7d; }
+  60% { fill: #3446c2; }
+  68% { fill: #7d7d7d; }
+  76%, 100% { fill: #3446c2; }
+}
+
+.title-emblem { margin: 0 auto 12px; }
+.footer-mark { display: inline-block; vertical-align: -3px; width: 16px; height: 16px; margin-right: 6px; image-rendering: pixelated; }
+
+/* Pantalla de arranque estilo CRT con el logo del estudio. */
+.boot {
+  position: fixed; inset: 0; z-index: 120; display: grid; place-items: center;
+  background: #05060d; color: var(--muted); overflow: hidden;
+}
+.boot::after {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  background: repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.28) 0 1px, transparent 1px 3px);
+}
+.boot.is-out { animation: boot-out 0.45s ease forwards; pointer-events: none; }
+@keyframes boot-out { to { opacity: 0; visibility: hidden; } }
+.boot-inner {
+  display: grid; justify-items: center; gap: 18px; text-align: center; padding: 24px;
+  transform-origin: center; animation: crt-on 0.55s ease-out;
+}
+@keyframes crt-on {
+  0% { transform: scaleY(0.02); filter: brightness(4); }
+  35% { transform: scaleY(0.02); filter: brightness(4); }
+  55% { transform: scaleY(1.04); filter: brightness(1.4); }
+  100% { transform: scaleY(1); filter: brightness(1); }
+}
+.boot-brand {
+  margin: 0; font-family: var(--font-pixel); font-size: 1.15rem; letter-spacing: 0.35em; color: #d6d6d6;
+  text-shadow: 0 0 12px rgba(52, 70, 194, 0.55); padding-left: 0.35em;
+  animation: brand-in 0.35s steps(2) 0.7s both;
+}
+.boot-presents {
+  margin: 0; font-family: var(--font-pixel); font-size: 0.5rem; letter-spacing: 0.4em; color: #7d7d7d;
+  padding-left: 0.4em; animation: brand-in 0.35s steps(2) 0.95s both;
+}
+@keyframes brand-in { from { opacity: 0; } to { opacity: 1; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .brand-pixel .brand-p { animation: none; fill: #3446c2; }
+  .brand-pixel { filter: none; }
+  .boot-inner { animation: none; }
+  .boot-brand, .boot-presents { animation: none; }
+}

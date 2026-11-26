@@ -21,8 +21,12 @@ export const STRINGS = {
     downloadCvPdf: 'Descargar CV (PDF)',
     exploreTown: 'Explorar el pueblo',
     loadingTown: 'Cargando el pueblo…',
+    boot: {
+      presents: 'PRESENTA',
+    },
     title: {
       kicker: 'Portafolio de',
+      madeBy: 'hecho por',
       mainMenu: 'Menú principal',
       newGame: ['Nueva partida', 'Explora el pueblo'],
       continue: ['Continuar', 'Vista rápida del CV'],
@@ -222,8 +226,12 @@ export const STRINGS = {
     downloadCvPdf: 'Download CV (PDF)',
     exploreTown: 'Explore the town',
     loadingTown: 'Loading the town…',
+    boot: {
+      presents: 'PRESENTS',
+    },
     title: {
       kicker: 'Portfolio of',
+      madeBy: 'made by',
       mainMenu: 'Main menu',
       newGame: ['New game', 'Explore the town'],
       continue: ['Continue', 'Quick view of the CV'],
